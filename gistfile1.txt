@@ -1,0 +1,2077 @@
+Code MagicControl
+
+build.gradle
+dependencies {
+    // Core Android (sans Google Play Services)
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+   
+    // Vosk - Reconnaissance vocale hors ligne
+    implementation 'net.java.dev.jna:jna:5.13.0@aar'
+    implementation(name: 'vosk-android', ext: 'aar')
+   
+    // TTS Natif Android (aucune dépendance externe)
+    // Aucune implémentation nécessaire - utilise Android TextToSpeech
+   
+    // Gestion des permissions
+    implementation 'androidx.activity:activity-ktx:1.7.2'
+    implementation 'androidx.fragment:fragment-ktx:1.6.1'
+   
+    // Tests
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+}
+
+WakeWordDetector.kt
+class WakeWordDetector(private val context: Context) {
+    private var smallModel: Model? = null
+    private var recognizer: Recognizer? = null
+    private var audioRecord: AudioRecord? = null
+    private var isListening = false
+    private val sampleRate = 16000
+    private val bufferSize = 1024  // Taille réduite pour économiser la batterie
+   
+    init {
+        loadModel()
+    }
+   
+    private fun loadModel() {
+        try {
+            // Modèle ultra léger (5MB) pour la détection du mot clé
+            val modelPath = when (getCurrentLanguage()) {
+                "fr" -> "model-fr-small"
+                "en" -> "model-en-small"
+                else -> "model-fr-small"
+            }
+            smallModel = Model(context.assets, modelPath)
+            recognizer = Recognizer(smallModel, sampleRate.toFloat())
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+   
+    fun startListening() {
+        if (isListening) return
+       
+        try {
+            // Configuration audio optimisée pour la batterie
+            audioRecord = AudioRecord(
+                MediaRecorder.AudioSource.VOICE_RECOGNITION,  // Source optimisée
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                bufferSize
+            )
+           
+            audioRecord?.startRecording()
+            isListening = true
+           
+            // Thread avec priorité basse pour économiser la batterie
+            Thread {
+                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+                val buffer = ByteArray(bufferSize)
+               
+                while (isListening) {
+                    val bytesRead = audioRecord?.read(buffer, 0, bufferSize) ?: 0
+                    if (bytesRead > 0) {
+                        if (recognizer?.acceptWaveForm(buffer, bytesRead) == true) {
+                            val result = recognizer?.result
+                            if (result?.contains(getActivationKeyword()) == true) {
+                                // Mot clé détecté - déclencher la reconnaissance complète
+                                onWakeWordDetected()
+                            }
+                        }
+                    }
+                    // Pause pour économiser la batterie
+                    Thread.sleep(50)
+                }
+            }.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+   
+    private fun onWakeWordDetected() {
+        // Arrêter temporairement l'écoute du wake word
+        stopListening()
+       
+        // Lancer la reconnaissance complète
+        val intent = Intent(context, FullRecognitionService::class.java)
+        context.startService(intent)
+       
+        // Redémarrer l'écoute après un délai
+        Handler(Looper.getMainLooper()).postDelayed({
+            startListening()
+        }, 5000)  // 5 secondes de pause
+    }
+   
+    fun stopListening() {
+        isListening = false
+        audioRecord?.stop()
+        audioRecord?.release()
+        audioRecord = null
+    }
+}
+
+FullRecognitionService.kt
+
+class FullRecognitionService : Service() {
+    private var fullModel: Model? = null
+    private var recognizer: Recognizer? = null
+    private var audioRecord: AudioRecord? = null
+    private var isListening = false
+   
+    override fun onCreate() {
+        super.onCreate()
+        loadFullModel()
+    }
+   
+    private fun loadFullModel() {
+        try {
+            // Modèle complet (40MB) pour la reconnaissance des commandes
+            val modelPath = when (getCurrentLanguage()) {
+                "fr" -> "model-fr"
+                "en" -> "model-en"
+                else -> "model-fr"
+            }
+            fullModel = Model(context.assets, modelPath)
+            recognizer = Recognizer(fullModel, 16000.0f)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+   
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startRecognition()
+        return START_NOT_STICKY
+    }
+   
+    private fun startRecognition() {
+        if (isListening) return
+       
+        try {
+            audioRecord = AudioRecord(
+                MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                16000,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                4096
+            )
+           
+            audioRecord?.startRecording()
+            isListening = true
+           
+            Thread {
+                val buffer = ByteArray(4096)
+                val timeout = 10000  // 10 secondes max
+               
+                val endTime = System.currentTimeMillis() + timeout
+                while (isListening && System.currentTimeMillis() < endTime) {
+                    val bytesRead = audioRecord?.read(buffer, 0, 4096) ?: 0
+                    if (bytesRead > 0) {
+                        if (recognizer?.acceptWaveForm(buffer, bytesRead) == true) {
+                            val result = recognizer?.result
+                            result?.let { processCommand(it) }
+                            stopSelf()  // Arrêter après traitement
+                        }
+                    }
+                }
+               
+                // Timeout atteint
+                stopSelf()
+            }.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            stopSelf()
+        }
+    }
+   
+    private fun processCommand(result: String) {
+        // Extraire et exécuter la commande
+        val command = extractCommand(result)
+        CommandProcessor.execute(this, command)
+    }
+   
+    override fun onDestroy() {
+        isListening = false
+        audioRecord?.stop()
+        audioRecord?.release()
+        audioRecord = null
+        super.onDestroy()
+    }
+   
+    override fun onBind(intent: Intent?): IBinder? = null
+}
+
+SystemIntegration.kt
+object SystemIntegration {
+    fun handleSystemCommand(context: Context, command: String) {
+        when {
+            command.contains("volume") -> handleVolumeCommand(context, command)
+            command.contains("wifi") -> toggleWifi(context)
+            command.contains("bluetooth") -> toggleBluetooth(context)
+            command.contains("luminosité") -> adjustBrightness(context, command)
+            command.contains("paramètres") -> openSettings(context)
+            command.contains("accueil") -> goHome(context)
+            command.contains("retour") -> goBack(context)
+        }
+    }
+   
+    private fun handleVolumeCommand(context: Context, command: String) {
+        val audioManager = context.getSystemService(AudioManager::class.java)
+       
+        when {
+            command.contains("augmenter") -> {
+                audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+                TTSManager.speak("Volume augmenté")
+            }
+            command.contains("baisser") -> {
+                audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
+                TTSManager.speak("Volume baissé")
+            }
+            command.contains("silence") -> {
+                audioManager.adjustVolume(AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
+                TTSManager.speak("Mode silence activé")
+            }
+        }
+    }
+   
+    private fun toggleWifi(context: Context) {
+        val wifiManager = context.applicationContext.getSystemService(WifiManager::class.java)
+        wifiManager?.let {
+            val isEnabled = it.isWifiEnabled
+            it.isWifiEnabled = !isEnabled
+            TTSManager.speak("Wifi ${if (!isEnabled) "activé" else "désactivé"}")
+        }
+    }
+   
+    private fun openSettings(context: Context) {
+        val intent = Intent(Settings.ACTION_SETTINGS)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+        TTSManager.speak("Paramètres ouverts")
+    }
+   
+    private fun goHome(context: Context) {
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+        TTSManager.speak("Écran d'accueil")
+    }
+   
+    private fun goBack(context: Context) {
+        // Utiliser le service d'accessibilité pour simuler le bouton retour
+        val service = MagicAccessibilityService.instance
+        service?.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+        TTSManager.speak("Retour")
+    }
+}
+
+TTSManager.kt (Natif Android)
+class TTSManager(private val context: Context) : TextToSpeech.OnInitListener {
+    private var tts: TextToSpeech? = null
+   
+    init {
+        tts = TextToSpeech(context, this)
+    }
+   
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            val lang = when (getCurrentLanguage()) {
+                "fr" -> Locale.FRENCH
+                "en" -> Locale.ENGLISH
+                else -> Locale.FRENCH
+            }
+            tts?.language = lang
+        }
+    }
+   
+    fun speak(text: String) {
+        tts?.speak(text, TextToSpeech.QUEUE_ADD, null, null)
+    }
+   
+    fun stop() {
+        tts?.stop()
+    }
+   
+    fun shutdown() {
+        tts?.shutdown()
+    }
+}
+
+Création de la Structure du Projet
+
+mkdir -p app/src/main/{java/com/magiccontrol/{service,recognizer,tts,accessibility,ui/{settings,components},utils},res/{layout,values,xml,raw,assets},libs}
+mkdir -p .github/workflows
+
+Création des Fichiers de Configuration
+# build.gradle (racine)
+cat > build.gradle << 'EOF'
+buildscript {
+    ext.kotlin_version = "1.8.0"
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:7.4.2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+EOF
+
+# settings.gradle
+cat > settings.gradle << 'EOF'
+include ':app'
+EOF
+
+# app/build.gradle
+cat > app/build.gradle << 'EOF'
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+
+android {
+    compileSdk 34
+    defaultConfig {
+        applicationId "com.magiccontrol"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'net.java.dev.jna:jna:5.13.0@aar'
+    implementation(name: 'vosk-android', ext: 'aar')
+    implementation 'androidx.activity:activity-ktx:1.7.2'
+    implementation 'androidx.fragment:fragment-ktx:1.6.1'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+}
+EOF
+
+Création des Fichiers Sources
+# Créer tous les fichiers Kotlin et XML comme montré précédemment
+# Exemple pour MainActivity.kt
+cat > app/src/main/java/com/magiccontrol/MainActivity.kt << 'EOF'
+package com.magiccontrol
+
+import android.content.Intent
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.magiccontrol.service.WakeWordService
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+       
+        // Démarrer le service d'écoute du wake word
+        startService(Intent(this, WakeWordService::class.java))
+    }
+}
+EOF
+
+# Répéter pour tous les autres fichiers Kotlin et XML...
+
+Création des Fichiers de Ressources
+
+# colors.xml (thème GitHub)
+cat > app/src/main/res/values/colors.xml << 'EOF'
+<resources>
+    <color name="github_bg">#0d1117</color>
+    <color name="github_surface">#161b22</color>
+    <color name="github_border">#30363d</color>
+    <color name="github_text">#c9d1d9</color>
+    <color name="github_accent">#58a6ff</color>
+    <color name="github_success">#3fb950</color>
+    <color name="github_warning">#d29922</color>
+    <color name="github_error">#f85149</color>
+   
+    <color name="primary">@color/github_accent</color>
+    <color name="primary_dark">#1f6feb</color>
+    <color name="accent">@color/github_success</color>
+    <color name="background">@color/github_bg</color>
+    <color name="surface">@color/github_surface</color>
+    <color name="border">@color/github_border</color>
+    <color name="text">@color/github_text</color>
+    <color name="text_secondary">#8b949e</color>
+</resources>
+EOF
+
+# Créer les autres fichiers XML (themes.xml, layouts, etc.)...
+
+Configuration de GitHub Actions
+cat > .github/workflows/build.yml << 'EOF'
+name: Build MagicControl
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+      - name: Build Android APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: magiccontrol-android
+          path: app/build/outputs/apk/release/app-release.apk
+EOF
+
+(root_preferences.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Catégorie: Paramètres généraux -->
+    <PreferenceCategory
+        android:title="@string/general_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Mot clé d'activation -->
+        <EditTextPreference
+            android:key="activation_keyword"
+            android:title="@string/keyword_title"
+            android:summary="@string/keyword_summary"
+            android:defaultValue="magic"
+            android:dialogTitle="@string/keyword_dialog_title"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <!-- Langue principale -->
+        <ListPreference
+            android:key="primary_language"
+            android:title="@string/primary_language_title"
+            android:summary="@string/primary_language_summary"
+            android:entries="@array/languages"
+            android:entryValues="@array/language_values"
+            android:defaultValue="fr"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <!-- Feedback vocal -->
+        <SwitchPreferenceCompat
+            android:key="voice_feedback"
+            android:title="@string/voice_feedback_title"
+            android:summary="@string/voice_feedback_summary"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Catégorie: Reconnaissance vocale -->
+    <PreferenceCategory
+        android:title="@string/vocal_recognition_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Sensibilité du micro -->
+        <SeekBarPreference
+            android:key="microphone_sensitivity"
+            android:title="@string/microphone_sensitivity_title"
+            android:summary="@string/microphone_sensitivity_summary"
+            android:defaultValue="50"
+            android:max="100"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+        <!-- Seuil de détection du mot clé -->
+        <SeekBarPreference
+            android:key="keyword_threshold"
+            android:title="@string/keyword_threshold_title"
+            android:summary="@string/keyword_threshold_summary"
+            android:defaultValue="70"
+            android:max="100"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+        <!-- Délai d'expiration -->
+        <SeekBarPreference
+            android:key="timeout_duration"
+            android:title="@string/timeout_duration_title"
+            android:summary="@string/timeout_duration_summary"
+            android:defaultValue="10"
+            android:max="30"
+            app:min="5"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+        <!-- Mode d'écoute continue -->
+        <SwitchPreferenceCompat
+            android:key="continuous_listening"
+            android:title="@string/continuous_listening_title"
+            android:summary="@string/continuous_listening_summary"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+
+        <!-- Optimisation batterie -->
+        <SwitchPreferenceCompat
+            android:key="battery_optimization"
+            android:title="@string/battery_optimization_title"
+            android:summary="@string/battery_optimization_summary"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Catégorie: Synthèse vocale -->
+    <PreferenceCategory
+        android:title="@string/speech_synthesis_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Moteur TTS -->
+        <ListPreference
+            android:key="tts_engine"
+            android:title="@string/tts_engine_title"
+            android:summary="@string/tts_engine_summary"
+            android:entries="@array/tts_engines"
+            android:entryValues="@array/tts_engine_values"
+            android:defaultValue="system"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <!-- Vitesse de parole -->
+        <SeekBarPreference
+            android:key="speech_rate"
+            android:title="@string/speech_rate_title"
+            android:summary="@string/speech_rate_summary"
+            android:defaultValue="100"
+            android:max="200"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+        <!-- Hauteur de voix -->
+        <SeekBarPreference
+            android:key="speech_pitch"
+            android:title="@string/speech_pitch_title"
+            android:summary="@string/speech_pitch_summary"
+            android:defaultValue="100"
+            android:max="200"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+        <!-- Volume TTS -->
+        <SeekBarPreference
+            android:key="tts_volume"
+            android:title="@string/tts_volume_title"
+            android:summary="@string/tts_volume_summary"
+            android:defaultValue="80"
+            android:max="100"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Catégorie: Langues -->
+    <PreferenceCategory
+        android:title="@string/languages_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Langues installées -->
+        <Preference
+            android:key="installed_languages"
+            android:title="@string/installed_languages_title"
+            android:summary="@string/installed_languages_summary"
+            app:iconSpaceReserved="false" />
+
+        <!-- Ajouter une langue -->
+        <Preference
+            android:key="add_language"
+            android:title="@string/add_language_title"
+            android:summary="@string/add_language_summary"
+            app:iconSpaceReserved="false" />
+
+        <!-- Télécharger les modèles -->
+        <Preference
+            android:key="download_models"
+            android:title="@string/download_models_title"
+            android:summary="@string/download_models_summary"
+            app:iconSpaceReserved="false" />
+
+        <!-- Supprimer les modèles -->
+        <Preference
+            android:key="delete_models"
+            android:title="@string/delete_models_title"
+            android:summary="@string/delete_models_summary"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Catégorie: Personnalisation -->
+    <PreferenceCategory
+        android:title="@string/customization_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Thème -->
+        <ListPreference
+            android:key="app_theme"
+            android:title="@string/app_theme_title"
+            android:summary="@string/app_theme_summary"
+            android:entries="@array/themes"
+            android:entryValues="@array/theme_values"
+            android:defaultValue="dark"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <!-- Couleur d'accentuation -->
+        <Preference
+            android:key="accent_color"
+            android:title="@string/accent_color_title"
+            android:summary="@string/accent_color_summary"
+            app:iconSpaceReserved="false" />
+
+        <!-- Contraste élevé -->
+        <SwitchPreferenceCompat
+            android:key="high_contrast"
+            android:title="@string/high_contrast_title"
+            android:summary="@string/high_contrast_summary"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+        <!-- Taille du texte -->
+        <SeekBarPreference
+            android:key="text_size"
+            android:title="@string/text_size_title"
+            android:summary="@string/text_size_summary"
+            android:defaultValue="16"
+            android:max="32"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+        <!-- Police personnalisée -->
+        <Preference
+            android:key="custom_font"
+            android:title="@string/custom_font_title"
+            android:summary="@string/custom_font_summary"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Catégorie: Sécurité -->
+    <PreferenceCategory
+        android:title="@string/security_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Verrouillage par mot de passe -->
+        <SwitchPreferenceCompat
+            android:key="password_lock"
+            android:title="@string/password_lock_title"
+            android:summary="@string/password_lock_summary"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+        <!-- Changer le mot de passe -->
+        <Preference
+            android:key="change_password"
+            android:title="@string/change_password_title"
+            android:summary="@string/change_password_summary"
+            app:iconSpaceReserved="false" />
+
+        <!-- Empreinte digitale -->
+        <SwitchPreferenceCompat
+            android:key="fingerprint_lock"
+            android:title="@string/fingerprint_lock_title"
+            android:summary="@string/fingerprint_lock_summary"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+        <!-- Chiffrement des données -->
+        <SwitchPreferenceCompat
+            android:key="data_encryption"
+            android:title="@string/data_encryption_title"
+            android:summary="@string/data_encryption_summary"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+
+        <!-- Journal d'activité -->
+        <SwitchPreferenceCompat
+            android:key="activity_log"
+            android:title="@string/activity_log_title"
+            android:summary="@string/activity_log_summary"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Catégorie: Importations/Exportations -->
+    <PreferenceCategory
+        android:title="@string/import_export_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Importer les paramètres -->
+        <Preference
+            android:key="import_settings"
+            android:title="@string/import_settings_title"
+            android:summary="@string/import_settings_summary"
+            app:iconSpaceReserved="false" />
+
+        <!-- Exporter les paramètres -->
+        <Preference
+            android:key="export_settings"
+            android:title="@string/export_settings_title"
+            android:summary="@string/export_settings_summary"
+            app:iconSpaceReserved="false" />
+
+        <!-- Importer les commandes personnalisées -->
+        <Preference
+            android:key="import_commands"
+            android:title="@string/import_commands_title"
+            android:summary="@string/import_commands_summary"
+            app:iconSpaceReserved="false" />
+
+        <!-- Exporter les commandes personnalisées -->
+        <Preference
+            android:key="export_commands"
+            android:title="@string/export_commands_title"
+            android:summary="@string/export_commands_summary"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Catégorie: Avancé -->
+    <PreferenceCategory
+        android:title="@string/advanced_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Mode développeur -->
+        <SwitchPreferenceCompat
+            android:key="developer_mode"
+            android:title="@string/developer_mode_title"
+            android:summary="@string/developer_mode_summary"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+        <!-- Logs de l'application -->
+        <Preference
+            android:key="app_logs"
+            android:title="@string/app_logs_title"
+            android:summary="@string/app_logs_summary"
+            app:iconSpaceReserved="false" />
+
+        <!-- Réinitialiser les paramètres -->
+        <Preference
+            android:key="reset_settings"
+            android:title="@string/reset_settings_title"
+            android:summary="@string/reset_settings_summary"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
+
+
+Fichier des Chaînes (strings.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ... Chaînes existantes ... -->
+
+    <!-- Paramètres généraux -->
+    <string name="general_settings">Paramètres généraux</string>
+    <string name="keyword_title">Mot clé d\'activation</string>
+    <string name="keyword_summary">Mot pour activer les commandes vocales</string>
+    <string name="keyword_dialog_title">Entrez le mot clé</string>
+    <string name="primary_language_title">Langue principale</string>
+    <string name="primary_language_summary">Langue principale de l\'application</string>
+    <string name="voice_feedback_title">Feedback vocal</string>
+    <string name="voice_feedback_summary">Activer les réponses vocales</string>
+
+    <!-- Reconnaissance vocale -->
+    <string name="vocal_recognition_settings">Reconnaissance vocale</string>
+    <string name="microphone_sensitivity_title">Sensibilité du micro</string>
+    <string name="microphone_sensitivity_summary">Ajuster la sensibilité du microphone</string>
+    <string name="keyword_threshold_title">Seuil de détection</string>
+    <string name="keyword_threshold_summary">Sensibilité de détection du mot clé</string>
+    <string name="timeout_duration_title">Délai d\'expiration</string>
+    <string name="timeout_duration_summary">Durée avant arrêt de l\'écoute (secondes)</string>
+    <string name="continuous_listening_title">Écoute continue</string>
+    <string name="continuous_listening_summary">Maintenir l\'écoute en arrière-plan</string>
+    <string name="battery_optimization_title">Optimisation batterie</string>
+    <string name="battery_optimization_summary">Réduire la consommation d\'énergie</string>
+
+    <!-- Synthèse vocale -->
+    <string name="speech_synthesis_settings">Synthèse vocale</string>
+    <string name="tts_engine_title">Moteur TTS</string>
+    <string name="tts_engine_summary">Sélectionner le moteur de synthèse vocale</string>
+    <string name="speech_rate_title">Vitesse de parole</string>
+    <string name="speech_rate_summary">Ajuster la vitesse de la synthèse vocale</string>
+    <string name="speech_pitch_title">Hauteur de voix</string>
+    <string name="speech_pitch_summary">Ajuster la hauteur de la synthèse vocale</string>
+    <string name="tts_volume_title">Volume TTS</string>
+    <string name="tts_volume_summary">Volume de la synthèse vocale</string>
+
+    <!-- Langues -->
+    <string name="languages_settings">Langues</string>
+    <string name="installed_languages_title">Langues installées</string>
+    <string name="installed_languages_summary">Gérer les langues installées</string>
+    <string name="add_language_title">Ajouter une langue</string>
+    <string name="add_language_summary">Télécharger une nouvelle langue</string>
+    <string name="download_models_title">Télécharger les modèles</string>
+    <string name="download_models_summary">Télécharger les modèles de reconnaissance</string>
+    <string name="delete_models_title">Supprimer les modèles</string>
+    <string name="delete_models_summary">Supprimer les modèles de reconnaissance</string>
+
+    <!-- Personnalisation -->
+    <string name="customization_settings">Personnalisation</string>
+    <string name="app_theme_title">Thème</string>
+    <string name="app_theme_summary">Choisir le thème de l\'application</string>
+    <string name="accent_color_title">Couleur d\'accentuation</string>
+    <string name="accent_color_summary">Personnaliser la couleur principale</string>
+    <string name="high_contrast_title">Contraste élevé</string>
+    <string name="high_contrast_summary">Améliorer le contraste des couleurs</string>
+    <string name="text_size_title">Taille du texte</string>
+    <string name="text_size_summary">Ajuster la taille du texte</string>
+    <string name="custom_font_title">Police personnalisée</string>
+    <string name="custom_font_summary">Choisir une police personnalisée</string>
+
+    <!-- Sécurité -->
+    <string name="security_settings">Sécurité</string>
+    <string name="password_lock_title">Verrouillage par mot de passe</string>
+    <string name="password_lock_summary">Exiger un mot de passe pour accéder à l\'application</string>
+    <string name="change_password_title">Changer le mot de passe</string>
+    <string name="change_password_summary">Modifier le mot de passe de l\'application</string>
+    <string name="fingerprint_lock_title">Empreinte digitale</string>
+    <string name="fingerprint_lock_summary">Utiliser l\'empreinte digitale pour déverrouiller</string>
+    <string name="data_encryption_title">Chiffrement des données</string>
+    <string name="data_encryption_summary">Chiffrer les données sensibles</string>
+    <string name="activity_log_title">Journal d\'activité</string>
+    <string name="activity_log_summary">Enregistrer les actions de l\'application</string>
+
+    <!-- Importations/Exportations -->
+    <string name="import_export_settings">Importations/Exportations</string>
+    <string name="import_settings_title">Importer les paramètres</string>
+    <string name="import_settings_summary">Importer une configuration sauvegardée</string>
+    <string name="export_settings_title">Exporter les paramètres</string>
+    <string name="export_settings_summary">Exporter la configuration actuelle</string>
+    <string name="import_commands_title">Importer les commandes</string>
+    <string name="import_commands_summary">Importer des commandes personnalisées</string>
+    <string name="export_commands_title">Exporter les commandes</string>
+    <string name="export_commands_summary">Exporter les commandes personnalisées</string>
+
+    <!-- Avancé -->
+    <string name="advanced_settings">Paramètres avancés</string>
+    <string name="developer_mode_title">Mode développeur</string>
+    <string name="developer_mode_summary">Activer les options de développement</string>
+    <string name="app_logs_title">Logs de l\'application</string>
+    <string name="app_logs_summary">Afficher les journaux de l\'application</string>
+    <string name="reset_settings_title">Réinitialiser les paramètres</string>
+    <string name="reset_settings_summary">Restaurer les paramètres par défaut</string>
+
+    <!-- Tableaux -->
+    <string-array name="languages">
+        <item>Français</item>
+        <item>English</item>
+        <item>Deutsch</item>
+        <item>Español</item>
+        <item>Italiano</item>
+        <item>Português</item>
+        <item>Русский</item>
+        <item>中文</item>
+        <item>日本語</item>
+        <item>한국어</item>
+    </string-array>
+    <string-array name="language_values">
+        <item>fr</item>
+        <item>en</item>
+        <item>de</item>
+        <item>es</item>
+        <item>it</item>
+        <item>pt</item>
+        <item>ru</item>
+        <item>zh</item>
+        <item>ja</item>
+        <item>ko</item>
+    </string-array>
+
+    <string-array name="tts_engines">
+        <item>Système Android</item>
+        <item>Vosk TTS</item>
+        <item>eSpeak TTS</item>
+    </string-array>
+    <string-array name="tts_engine_values">
+        <item>system</item>
+        <item>vosk</item>
+        <item>espeak</item>
+    </string-array>
+
+    <string-array name="themes">
+        <item>Sombre</item>
+        <item>Clair</item>
+        <item>Automatique</item>
+        <item>Noir pur</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>dark</item>
+        <item>light</item>
+        <item>auto</item>
+        <item>black</item>
+    </string-array>
+</resources>
+
+
+Création des Écrans de Paramètres Avancés
+LanguagesSettingsFragment.kt
+class LanguagesSettingsFragment : PreferenceFragmentCompat() {
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        setPreferencesFromResource(R.xml.languages_preferences, rootKey)
+       
+        findPreference<Preference>("installed_languages")?.setOnPreferenceClickListener {
+            showInstalledLanguages()
+            true
+        }
+       
+        findPreference<Preference>("add_language")?.setOnPreferenceClickListener {
+            showAddLanguageDialog()
+            true
+        }
+       
+        findPreference<Preference>("download_models")?.setOnPreferenceClickListener {
+            downloadLanguageModels()
+            true
+        }
+       
+        findPreference<Preference>("delete_models")?.setOnPreferenceClickListener {
+            showDeleteModelsDialog()
+            true
+        }
+    }
+   
+    private fun showInstalledLanguages() {
+        // Afficher la liste des langues installées
+        val installedLanguages = getInstalledLanguages()
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Langues installées")
+            .setItems(installedLanguages.toTypedArray()) { _, which ->
+                // Gérer la sélection
+            }
+            .setNegativeButton("Fermer", null)
+            .create()
+        dialog.show()
+    }
+   
+    private fun showAddLanguageDialog() {
+        val availableLanguages = getAvailableLanguages()
+        val selectedItems = mutableListOf<String>()
+       
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Ajouter une langue")
+            .setMultiChoiceItems(
+                availableLanguages.keys.toTypedArray(),
+                null
+            ) { _, which, isChecked ->
+                val lang = availableLanguages.keys.elementAt(which)
+                if (isChecked) {
+                    selectedItems.add(lang)
+                } else {
+                    selectedItems.remove(lang)
+                }
+            }
+            .setPositiveButton("Télécharger") { _, _ ->
+                downloadLanguages(selectedItems)
+            }
+            .setNegativeButton("Annuler", null)
+            .create()
+        dialog.show()
+    }
+   
+    private fun downloadLanguageModels() {
+        // Lancer le téléchargement des modèles
+        val intent = Intent(context, ModelDownloadService::class.java)
+        context?.startService(intent)
+    }
+   
+    private fun showDeleteModelsDialog() {
+        val installedModels = getInstalledModels()
+        val selectedItems = mutableListOf<String>()
+       
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Supprimer les modèles")
+            .setMultiChoiceItems(
+                installedModels.toTypedArray(),
+                null
+            ) { _, which, isChecked ->
+                val model = installedModels[which]
+                if (isChecked) {
+                    selectedItems.add(model)
+                } else {
+                    selectedItems.remove(model)
+                }
+            }
+            .setPositiveButton("Supprimer") { _, _ ->
+                deleteModels(selectedItems)
+            }
+            .setNegativeButton("Annuler", null)
+            .create()
+        dialog.show()
+    }
+}
+
+
+Layouts des Dialogues Personnalisés
+dialog_change_password.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mot de passe actuel"
+        android:textColor="@color/text"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/current_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp"
+        android:textColor="@color/text"
+        android:textSize="16sp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nouveau mot de passe"
+        android:textColor="@color/text"
+        android:textSize="14sp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/new_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp"
+        android:textColor="@color/text"
+        android:textSize="16sp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Confirmer le mot de passe"
+        android:textColor="@color/text"
+        android:textSize="14sp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/confirm_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp"
+        android:textColor="@color/text"
+        android:textSize="16sp"/>
+
+</LinearLayout>
+
+
+edit_text_background.xml
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/surface"/>
+    <stroke android:width="1dp" android:color="@color/border"/>
+    <corners android:radius="6dp"/>
+</shape>
+
+
+Gestion des Préférences
+PreferencesManager.kt
+
+object PreferencesManager {
+    private const val PREFS_NAME = "magic_control_prefs"
+   
+    fun getActivationKeyword(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString("activation_keyword", "magic") ?: "magic"
+    }
+   
+    fun setActivationKeyword(context: Context, keyword: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString("activation_keyword", keyword).apply()
+    }
+   
+    fun getMicrophoneSensitivity(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getInt("microphone_sensitivity", 50)
+    }
+   
+    fun setMicrophoneSensitivity(context: Context, sensitivity: Int) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putInt("microphone_sensitivity", sensitivity).apply()
+    }
+   
+    fun isPasswordLockEnabled(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean("password_lock", false)
+    }
+   
+    fun setPasswordLockEnabled(context: Context, enabled: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("password_lock", enabled).apply()
+    }
+   
+    fun getSavedPassword(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString("saved_password", null)
+    }
+   
+    fun savePassword(context: Context, password: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString("saved_password", password).apply()
+    }
+   
+    fun getInstalledLanguages(context: Context): Set<String> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getStringSet("installed_languages", setOf("fr", "en")) ?: setOf("fr", "en")
+    }
+   
+    fun addInstalledLanguage(context: Context, language: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val currentLanguages = getInstalledLanguages(context).toMutableSet()
+        currentLanguages.add(language)
+        prefs.edit().putStringSet("installed_languages", currentLanguages).apply()
+    }
+   
+    fun removeInstalledLanguage(context: Context, language: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val currentLanguages = getInstalledLanguages(context).toMutableSet()
+        currentLanguages.remove(language)
+        prefs.edit().putStringSet("installed_languages", currentLanguages).apply()
+    }
+}
+
+
+
+Service de Téléchargement des Modèles
+ModelDownloadService.kt
+class ModelDownloadService : Service() {
+    private lateinit var notificationManager: NotificationManager
+    private var isDownloading = false
+   
+    override fun onCreate() {
+        super.onCreate()
+        notificationManager = getSystemService(NotificationManager::class.java)
+    }
+   
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!isDownloading) {
+            startDownload()
+        }
+        return START_NOT_STICKY
+    }
+   
+    private fun startDownload() {
+        isDownloading = true
+        startForeground(1, createNotification("Téléchargement en cours..."))
+       
+        // Simuler le téléchargement des modèles
+        Thread {
+            val languages = PreferencesManager.getInstalledLanguages(this)
+            for (language in languages) {
+                updateNotification("Téléchargement du modèle $language...")
+                Thread.sleep(2000) // Simuler le téléchargement
+            }
+           
+            updateNotification("Téléchargement terminé")
+            Thread.sleep(1000)
+           
+            stopForeground(true)
+            stopSelf()
+        }.start()
+    }
+   
+    private fun createNotification(content: String): Notification {
+        val channelId = "model_download_channel"
+        createNotificationChannel(channelId)
+       
+        return NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Téléchargement des modèles")
+            .setContentText(content)
+            .setSmallIcon(R.drawable.ic_download)
+            .setProgress(0, 0, true)
+            .build()
+    }
+   
+    private fun updateNotification(content: String) {
+        val notification = createNotification(content)
+        notificationManager.notify(1, notification)
+    }
+   
+    private fun createNotificationChannel(channelId: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Téléchargement des modèles",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+   
+    override fun onBind(intent: Intent?): IBinder? = null
+}
+
+
+
+ic_app_placeholder.xml (Placeholder icône application)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/text_secondary">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M18,2H6C4.9,2 4,2.9 4,4v16c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V4C20,2.9 19.1,2 18,2zM6,4h5v8l-2.5,-1.5L6,12V4z"/>
+</vector>
+
+
+
+ic_launch.xml (Lancer application)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/text_secondary">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M10,8v8l5,-4z"/>
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M19,3H5c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2V5c0,-1.1 -0.9,-2 -2,-2zM5,19V5h14v14H5z"/>
+</vector>
+
+
+ic_info.xml (À propos)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/text">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2V7h2V9z"/>
+</vector>
+
+
+
+ic_help.xml (Aide)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/text">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,19h-2v-2h2v2zM15.07,11.25l-0.9,0.92C13.45,12.9 13,13.5 13,15h-2v-0.5c0,-1.1 0.45,-2.1 1.17,-2.83l1.24,-1.26c0.37,-0.36 0.59,-0.86 0.59,-1.41 0,-1.1 -0.9,-2 -2,-2s-2,0.9 -2,2H8c0,-2.21 1.79,-4 4,-4s4,1.79 4,4c0,0.88 -0.36,1.68 -0.93,2.25z"/>
+</vector>
+
+
+ic_settings.xml (Paramètres)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/nav_item_text">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M19.14,12.94c0.04,-0.3 0.06,-0.61 0.06,-0.94c0,-0.32 -0.02,-0.64 -0.07,-0.94l2.03,-1.58c0.18,-0.14 0.23,-0.41 0.12,-0.61l-1.92,-3.32c-0.12,-0.22 -0.37,-0.29 -0.59,-0.22l-2.39,0.96c-0.5,-0.38 -1.03,-0.7 -1.62,-0.94L14.4,2.81c-0.04,-0.24 -0.24,-0.41 -0.48,-0.41h-3.84c-0.24,0 -0.43,0.17 -0.47,0.41L9.25,5.35C8.66,5.59 8.12,5.92 7.63,6.29L5.24,5.33c-0.22,-0.08 -0.47,0 -0.59,0.22L2.74,8.87C2.62,9.08 2.66,9.34 2.86,9.48l2.03,1.58C4.84,11.36 4.8,11.69 4.8,12s0.02,0.64 0.07,0.94l-2.03,1.58c-0.18,0.14 -0.23,0.41 -0.12,0.61l1.92,3.32c0.12,0.22 0.37,0.29 0.59,0.22l2.39,-0.96c0.5,0.38 1.03,0.7 1.62,0.94l0.36,2.54c0.05,0.24 0.24,0.41 0.48,0.41h3.84c0.24,0 0.44,-0.17 0.47,-0.41l0.36,-2.54c0.59,-0.24 1.13,-0.56 1.62,-0.94l2.39,0.96c0.22,0.08 0.47,0 0.59,-0.22l1.92,-3.32c0.12,-0.22 0.07,-0.47 -0.12,-0.61L19.14,12.94zM12,15.6c-1.98,0 -3.6,-1.62 -3.6,-3.6s1.62,-3.6 3.6,-3.6s3.6,1.62 3.6,3.6S13.98,15.6 12,15.6z"/>
+</vector>
+
+
+
+ic_commands.xml (Commandes)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/nav_item_text">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9.4,16.6L4.8,12l4.6,-4.6L8,6l-6,6 6,6 1.4,-1.4zM14.6,16.6l4.6,-4.6 -4.6,-4.6L16,6l6,6 -6,6 -1.4,-1.4z"/>
+</vector>
+
+
+
+ic_apps.xml (Applications)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/nav_item_text">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M4,8h4V4H4V8zM10,20h4v-4h-4V20zM4,20h4v-4H4V20zM4,14h4v-4H4V14zM10,14h4v-4h-4V14zM16,4v4h4V4H16zM10,8h4V4h-4V8zM16,14h4v-4h-4V14zM16,20h4v-4h-4V20z"/>
+</vector>
+
+
+
+ic_home.xml (Accueil)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/nav_item_text">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M10,20v-6h4v6h5v-8h3L12,3 2,12h3v8z"/>
+</vector>
+
+
+
+ic_arrow_left.xml (Retour)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/text">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M20,11H7.83l5.59,-5.59L12,4l-8,8 8,8 1.41,-1.41L7.83,13H20v-2z"/>
+</vector>
+
+
+
+ic_menu.xml (Menu)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/text">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M3,18h18v-2H3v2zM3,13h18v-2H3v2zM3,6v2h18V6H3z"/>
+</vector>
+
+
+
+ic_mic.xml (Microphone)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/accent">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,14c1.66,0 2.99,-1.34 2.99,-3L15,5c0,-1.66 -1.34,-3 -3,-3S9,3.34 9,5v6c0,1.66 1.34,3 3,3zM17.3,11c0,3 -2.54,5.1 -5.3,5.1S6.7,14 6.7,11H5c0,3.41 2.72,6.23 6,6.72V21h2v-3.28c3.28,-0.48 6,-3.3 6,-6.72H17.3z"/>
+</vector>
+
+
+
+ic_magic_control.xml (Logo principal)
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/accent">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,17c-0.55,0 -1,-0.45 -1,-1s0.45,-1 1,-1 1,0.45 1,1 -0.45,1 -1,1zM13,13h-2V7h2V13z"/>
+</vector>
+
+
+
+Drawable pour les Arrière-plans (item_background.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/menu_item_hover">
+
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/menu_item_hover" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+
+</ripple>
+
+
+
+
+Layout des Préférences Personnalisées (preference_category_magic.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="16dp"
+    android:paddingBottom="8dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
+
+    <TextView
+        android:id="@android:id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textAllCaps="true" />
+
+</LinearLayout>
+
+
+
+Menu Principal (main_menu.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_help"
+        android:icon="@drawable/ic_help"
+        android:title="@string/help"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_about"
+        android:icon="@drawable/ic_info"
+        android:title="@string/about"
+        app:showAsAction="ifRoom" />
+
+</menu>
+
+
+
+Menu de Navigation (bottom_nav_menu.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="@string/home" />
+
+    <item
+        android:id="@+id/nav_apps"
+        android:icon="@drawable/ic_apps"
+        android:title="@string/apps" />
+
+    <item
+        android:id="@+id/nav_commands"
+        android:icon="@drawable/ic_commands"
+        android:title="@string/commands" />
+
+    <item
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/settings" />
+
+</menu>
+
+
+
+
+Layout des Éléments de Liste (item_app.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:background="@drawable/item_background"
+    android:gravity="center_vertical">
+
+    <!-- Icône de l'application -->
+    <ImageView
+        android:id="@+id/app_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="16dp"
+        tools:src="@drawable/ic_app_placeholder" />
+
+    <!-- Nom de l'application -->
+    <TextView
+        android:id="@+id/app_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="@color/text"
+        android:textSize="16sp"
+        tools:text="Nom de l'application" />
+
+    <!-- Bouton d'action -->
+    <ImageButton
+        android:id="@+id/app_action"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_launch"
+        android:tint="@color/text_secondary"
+        android:contentDescription="@string/launch_app" />
+
+</LinearLayout>
+
+
+
+
+Layout des Préférences (root_preferences.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Catégorie: Paramètres généraux -->
+    <PreferenceCategory
+        android:title="@string/general_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Mot clé d'activation -->
+        <EditTextPreference
+            android:key="activation_keyword"
+            android:title="@string/keyword_title"
+            android:summary="@string/keyword_summary"
+            android:defaultValue="magic"
+            android:dialogTitle="@string/keyword_dialog_title"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <!-- Langue -->
+        <ListPreference
+            android:key="language"
+            android:title="@string/language_title"
+            android:summary="@string/language_summary"
+            android:entries="@array/languages"
+            android:entryValues="@array/language_values"
+            android:defaultValue="fr"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <!-- Feedback vocal -->
+        <SwitchPreferenceCompat
+            android:key="voice_feedback"
+            android:title="@string/voice_feedback_title"
+            android:summary="@string/voice_feedback_summary"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Catégorie: Paramètres vocaux -->
+    <PreferenceCategory
+        android:title="@string/vocal_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Sensibilité du micro -->
+        <SeekBarPreference
+            android:key="microphone_sensitivity"
+            android:title="@string/microphone_sensitivity_title"
+            android:summary="@string/microphone_sensitivity_summary"
+            android:defaultValue="50"
+            android:max="100"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+        <!-- Vitesse de parole -->
+        <SeekBarPreference
+            android:key="speech_rate"
+            android:title="@string/speech_rate_title"
+            android:summary="@string/speech_rate_summary"
+            android:defaultValue="100"
+            android:max="200"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+        <!-- Hauteur de voix -->
+        <SeekBarPreference
+            android:key="speech_pitch"
+            android:title="@string/speech_pitch_title"
+            android:summary="@string/speech_pitch_summary"
+            android:defaultValue="100"
+            android:max="200"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Catégorie: Accessibilité -->
+    <PreferenceCategory
+        android:title="@string/accessibility_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Contraste élevé -->
+        <SwitchPreferenceCompat
+            android:key="high_contrast"
+            android:title="@string/high_contrast_title"
+            android:summary="@string/high_contrast_summary"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+        <!-- Taille du texte -->
+        <SeekBarPreference
+            android:key="text_size"
+            android:title="@string/text_size_title"
+            android:summary="@string/text_size_summary"
+            android:defaultValue="16"
+            android:max="32"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- Catégorie: Sécurité -->
+    <PreferenceCategory
+        android:title="@string/security_settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Verrouillage par mot de passe -->
+        <SwitchPreferenceCompat
+            android:key="password_lock"
+            android:title="@string/password_lock_title"
+            android:summary="@string/password_lock_summary"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+        <!-- Changer le mot de passe -->
+        <Preference
+            android:key="change_password"
+            android:title="@string/change_password_title"
+            android:summary="@string/change_password_summary"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
+
+
+
+
+Layout de l'Activité des Paramètres (settings_activity.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+    <!-- Toolbar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/surface"
+        app:title="@string/settings"
+        app:titleTextColor="@color/text"
+        app:navigationIcon="@drawable/ic_arrow_left"
+        app:elevation="0dp" />
+
+    <!-- Conteneur des préférences -->
+    <FrameLayout
+        android:id="@+id/settings_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</LinearLayout>
+
+
+
+
+Layout de l'Activité Principale (activity_main.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    tools:context=".MainActivity">
+
+    <!-- Barre d'application -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/surface"
+        app:title="@string/app_name"
+        app:titleTextColor="@color/text"
+        app:navigationIcon="@drawable/ic_menu"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Logo -->
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginTop="32dp"
+        android:src="@drawable/ic_magic_control"
+        android:contentDescription="@string/logo_desc"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Texte d'état -->
+    <TextView
+        android:id="@+id/status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/welcome_message"
+        android:textColor="@color/text_secondary"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@id/logo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Bouton vocal -->
+    <com.magiccontrol.ui.components.VoiceButtonView
+        android:id="@+id/voice_button"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="48dp"
+        android:src="@drawable/ic_mic"
+        android:contentDescription="@string/voice_button_desc"
+        app:layout_constraintTop_toBottomOf="@id/status_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Bouton des paramètres -->
+    <Button
+        android:id="@+id/settings_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="@string/settings"
+        style="@style/ButtonMagic"
+        app:layout_constraintTop_toBottomOf="@id/voice_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Menu inférieur -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/nav_background"
+        app:menu="@menu/bottom_nav_menu"
+        app:itemIconTint="@color/nav_item_text"
+        app:itemTextColor="@color/nav_item_text"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+Styles des Composants (styles.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Boutons -->
+    <style name="ButtonMagic" parent="Widget.MaterialComponents.Button">
+        <item name="android:textColor">@color/button_text</item>
+        <item name="backgroundTint">@color/button_normal</item>
+        <item name="rippleColor">@color/accent</item>
+        <item name="strokeColor">@color/border</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">6dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+    </style>
+   
+    <style name="ButtonMagic.Accent" parent="ButtonMagic">
+        <item name="backgroundTint">@color/button_accent</item>
+        <item name="android:textColor">@color/button_accent_text</item>
+        <item name="strokeColor">@color/button_accent</item>
+    </style>
+   
+    <!-- Champs de texte -->
+    <style name="EditTextMagic" parent="Widget.AppCompat.EditText">
+        <item name="android:textColor">@color/text</item>
+        <item name="android:textColorHint">@color/text_muted</item>
+        <item name="android:backgroundTint">@color/border</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+   
+    <!-- Cases à cocher -->
+    <style name="CheckBoxMagic" parent="Widget.AppCompat.CompoundButton.CheckBox">
+        <item name="android:textColor">@color/text</item>
+        <item name="buttonTint">@color/accent</item>
+    </style>
+   
+    <!-- Interrupteurs -->
+    <style name="SwitchMagic" parent="Widget.AppCompat.CompoundButton.Switch">
+        <item name="android:textColor">@color/text</item>
+        <item name="thumbTint">@color/accent</item>
+        <item name="trackTint">@color/border</item>
+    </style>
+   
+    <!-- Barres de progression -->
+    <style name="ProgressBarMagic" parent="Widget.AppCompat.ProgressBar">
+        <item name="android:indeterminateTint">@color/accent</item>
+    </style>
+   
+    <!-- Listes déroulantes -->
+    <style name="SpinnerMagic" parent="Widget.AppCompat.Spinner">
+        <item name="android:backgroundTint">@color/border</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+   
+    <!-- Barres de recherche -->
+    <style name="SeekBarMagic" parent="Widget.AppCompat.SeekBar">
+        <item name="android:progressTint">@color/accent</item>
+        <item name="android:thumbTint">@color/accent</item>
+        <item name="android:backgroundTint">@color/border</item>
+    </style>
+   
+    <!-- Barre d'action -->
+    <style name="ActionBarTheme" parent="ThemeOverlay.MaterialComponents.ActionBar">
+        <item name="android:background">@color/surface</item>
+        <item name="android:titleTextColor">@color/text</item>
+        <item name="colorControlNormal">@color/text</item>
+        <item name="elevation">0dp</item>
+    </style>
+   
+    <!-- Toolbar -->
+    <style name="ToolbarStyle" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/surface</item>
+        <item name="titleTextColor">@color/text</item>
+        <item name="subtitleTextColor">@color/text_secondary</item>
+        <item name="navigationIconTint">@color/text</item>
+        <item name="elevation">0dp</item>
+    </style>
+   
+    <!-- Navigation inférieure -->
+    <style name="BottomNavStyle" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="android:background">@color/nav_background</item>
+        <item name="itemTextColor">@color/nav_item_text</item>
+        <item name="itemIconTint">@color/nav_item_text</item>
+        <item name="elevation">0dp</item>
+    </style>
+   
+    <!-- Préférences -->
+    <style name="PreferenceThemeOverlay.MagicControl">
+        <item name="android:textColor">@color/text</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorPrimary">@color/text</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="colorControlNormal">@color/text_secondary</item>
+        <item name="preferenceCategory_style">@style/Preference.Category.MagicControl</item>
+        <item name="preferenceStyle">@style/Preference.MagicControl</item>
+        <item name="checkBoxPreferenceStyle">@style/Preference.CheckBox.MagicControl</item>
+        <item name="switchPreferenceCompatStyle">@style/Preference.Switch.MagicControl</item>
+        <item name="seekBarPreferenceStyle">@style/Preference.SeekBar.MagicControl</item>
+    </style>
+   
+    <style name="Preference.Category.MagicControl" parent="Preference.Category.Material">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:layout">@layout/preference_category_magic</item>
+    </style>
+   
+    <style name="Preference.MagicControl" parent="Preference.Material">
+        <item name="android:textColor">@color/text</item>
+        <item name="android:summaryTextColor">@color/text_secondary</item>
+        <item name="iconSpaceReserved">false</item>
+    </style>
+   
+    <style name="Preference.CheckBox.MagicControl" parent="Preference.CheckBox.Material">
+        <item name="android:textColor">@color/text</item>
+        <item name="android:summaryTextColor">@color/text_secondary</item>
+        <item name="iconSpaceReserved">false</item>
+    </style>
+   
+    <style name="Preference.Switch.MagicControl" parent="Preference.SwitchCompat.Material">
+        <item name="android:textColor">@color/text</item>
+        <item name="android:summaryTextColor">@color/text_secondary</item>
+        <item name="iconSpaceReserved">false</item>
+    </style>
+   
+    <style name="Preference.SeekBar.MagicControl" parent="Preference.SeekBarPreference.Material">
+        <item name="android:textColor">@color/text</item>
+        <item name="android:summaryTextColor">@color/text_secondary</item>
+        <item name="iconSpaceReserved">false</item>
+    </style>
+</resources>
+
+
+
+
+Thème Principal (themes.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Thème principal -->
+    <style name="Theme.MagicControl" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Couleurs principales -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text</item>
+       
+        <!-- Arrière-plan -->
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:colorBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/surface</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+       
+        <!-- Texte -->
+        <item name="android:textColor">@color/text</item>
+        <item name="android:textColorPrimary">@color/text</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorTertiary">@color/text_muted</item>
+       
+        <!-- Composants -->
+        <item name="android:buttonStyle">@style/ButtonMagic</item>
+        <item name="android:editTextStyle">@style/EditTextMagic</item>
+        <item name="android:checkboxStyle">@style/CheckBoxMagic</item>
+        <item name="android:switchStyle">@style/SwitchMagic</item>
+        <item name="android:progressBarStyle">@style/ProgressBarMagic</item>
+        <item name="android:spinnerStyle">@style/SpinnerMagic</item>
+        <item name="android:seekBarStyle">@style/SeekBarMagic</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.MagicControl</item>
+       
+        <!-- Superposition système -->
+        <item name="actionBarTheme">@style/ActionBarTheme</item>
+        <item name="toolbarStyle">@style/ToolbarStyle</item>
+        <item name="bottomNavigationStyle">@style/BottomNavStyle</item>
+    </style>
+   
+    <!-- Thème pour les paramètres -->
+    <style name="Theme.MagicControl.Settings" parent="Theme.MagicControl">
+        <item name="android:windowBackground">@color/surface</item>
+    </style>
+</resources>
+
+
+
+
+Palette de Couleurs (colors.xml)
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Couleurs GitHub Dark (sans vert) -->
+    <color name="github_bg">#0d1117</color>
+    <color name="github_surface">#161b22</color>
+    <color name="github_elevated">#21262d</color>
+    <color name="github_border">#30363d</color>
+    <color name="github_border_muted">#21262d</color>
+    <color name="github_text">#c9d1d9</color>
+    <color name="github_text_secondary">#8b949e</color>
+    <color name="github_text_muted">#6e7681</color>
+    <color name="github_accent">#58a6ff</color>
+    <color name="github_accent_hover">#1f6feb</color>
+    <color name="github_warning">#d29922</color>
+    <color name="github_error">#f85149</color>
+    <color name="github_success">#56d364</color> <!-- Vert très discret uniquement pour les confirmations -->
+   
+    <!-- Application -->
+    <color name="primary">@color/github_accent</color>
+    <color name="primary_dark">@color/github_accent_hover</color>
+    <color name="background">@color/github_bg</color>
+    <color name="surface">@color/github_surface</color>
+    <color name="elevated">@color/github_elevated</color>
+    <color name="border">@color/github_border</color>
+    <color name="border_muted">@color/github_border_muted</color>
+    <color name="text">@color/github_text</color>
+    <color name="text_secondary">@color/github_text_secondary</color>
+    <color name="text_muted">@color/github_text_muted</color>
+    <color name="accent">@color/github_accent</color>
+    <color name="warning">@color/github_warning</color>
+    <color name="error">@color/github_error</color>
+    <color name="success">@color/github_success</color>
+   
+    <!-- Boutons -->
+    <color name="button_normal">@color/github_surface</color>
+    <color name="button_pressed">@color/github_elevated</color>
+    <color name="button_text">@color/github_text</color>
+    <color name="button_accent">@color/github_accent</color>
+    <color name="button_accent_text">@color/github_bg</color>
+   
+    <!-- Bouton vocal -->
+    <color name="voice_button_normal">@color/github_accent</color>
+    <color name="voice_button_listening">@color/github_warning</color>
+    <color name="voice_button_error">@color/github_error</color>
+    <color name="voice_button_success">@color/github_success</color>
+   
+    <!-- Menu -->
+    <color name="menu_background">@color/github_elevated</color>
+    <color name="menu_item_hover">@color/github_surface</color>
+   
+    <!-- Navigation -->
+    <color name="nav_background">@color/github_surface</color>
+    <color name="nav_item_selected">@color/github_accent</color>
+    <color name="nav_item_text">@color/github_text</color>
+</resources>
