@@ -1,0 +1,17 @@
+{
+  "available_models": [
+    {
+      "code": "fr-small",
+      "name": "Français (Petit)",
+      "size": "40MB",
+      "enabled": true
+    },
+    {
+      "code": "en-small", 
+      "name": "English (Small)",
+      "size": "40MB",
+      "enabled": true
+    }
+  ],
+  "default_model": "fr-small"
+}
