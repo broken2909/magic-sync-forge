@@ -5,6 +5,7 @@ plugins {
 
 android {
     compileSdk 34
+    namespace 'com.magiccontrol'
 
     defaultConfig {
         applicationId "com.magiccontrol"
@@ -18,6 +19,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
     }
 
@@ -32,20 +34,13 @@ android {
 }
 
 dependencies {
-    // CORE ANDROID (sans Google Play Services) - Z.ai
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
-    
-    // VOSK - Reconnaissance vocale hors ligne - Z.ai
     implementation 'net.java.dev.jna:jna:5.13.0@aar'
     implementation(name: 'vosk-android', ext: 'aar')
-    
-    // Gestion des permissions - Z.ai
     implementation 'androidx.activity:activity-ktx:1.7.2'
     implementation 'androidx.fragment:fragment-ktx:1.6.1'
-    
-    // Tests - Z.ai
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
 }
