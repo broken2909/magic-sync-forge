@@ -36,8 +36,11 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
-    implementation 'net.java.dev.jna:jna:5.13.0@aar'
-    implementation(name: 'vosk-android', ext: 'aar')
+    implementation 'net.java.dev.jna:jna:5.13.0'
+    
+    // SOLUTION GARANTIE: Vosk depuis Maven
+    implementation 'com.github.alphacep:vosk-android:0.3.32'
+    
     implementation 'androidx.activity:activity-ktx:1.7.2'
     implementation 'androidx.fragment:fragment-ktx:1.6.1'
     testImplementation 'junit:junit:4.13.2'
