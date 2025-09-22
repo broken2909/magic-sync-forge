@@ -79,3 +79,7 @@ lint/reports/
 
 # Android Profiling
 *.hprof
+
+# Models Vosk (trop gros pour GitHub)
+vosk-model-*.zip
+app/src/main/assets/models/vosk-model-*large*
