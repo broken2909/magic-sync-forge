@@ -1,6 +1,11 @@
 package com.magiccontrol.ui.settings
+
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+
 class SettingsActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState) }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Le layout sera ajouté quand les ressources seront prêtes
+    }
 }

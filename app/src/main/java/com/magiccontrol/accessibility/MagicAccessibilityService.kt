@@ -18,8 +18,6 @@ class MagicAccessibilityService : AccessibilityService() {
     
     override fun onInterrupt() {}
     
-    override fun onBind(intent: android.content.Intent?): android.os.IBinder? = null
-    
     override fun onDestroy() {
         super.onDestroy()
         instance = null
@@ -31,5 +29,9 @@ class MagicAccessibilityService : AccessibilityService() {
     
     fun goHome() {
         performGlobalAction(GLOBAL_ACTION_HOME)
+    }
+    
+    fun openQuickSettings() {
+        performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS)
     }
 }
