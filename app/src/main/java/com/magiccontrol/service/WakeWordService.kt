@@ -48,5 +48,5 @@ class WakeWordService : Service() {
         wakeWordDetector.stopListening()
     }
 
-    override fun onBind(intent: Intent?): IBinder? = null
+    override fun onBind(intent: Intent?): IBinder = VoiceServiceBinder(this)
 }
