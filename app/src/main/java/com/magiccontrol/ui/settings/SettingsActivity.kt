@@ -1,6 +1,9 @@
 package com.magiccontrol.ui.settings
 
 import android.os.Bundle
+import android.view.ViewGroup
+import android.view.LayoutInflater
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -13,7 +16,6 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Créer une interface simple
         val viewPager = ViewPager(this)
         viewPager.id = android.R.id.content
         setContentView(viewPager)
@@ -29,11 +31,7 @@ class SettingsActivity : AppCompatActivity() {
     private inner class SettingsPagerAdapter(fm: FragmentManager) : 
         FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
         
-        private val fragments = listOf(
-            GeneralSettingsFragment(),
-            LanguagesSettingsFragment()
-        )
-        
+        private val fragments = listOf(GeneralSettingsFragment(), LanguagesSettingsFragment())
         private val titles = listOf("Général", "Langues")
         
         override fun getItem(position: Int): Fragment = fragments[position]
@@ -45,7 +43,7 @@ class SettingsActivity : AppCompatActivity() {
 class GeneralSettingsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return android.widget.TextView(requireContext()).apply {
-            text = "Paramètres généraux - En développement"
+            text = "Paramètres généraux"
             textSize = 18f
             setPadding(50, 50, 50, 50)
         }
