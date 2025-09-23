@@ -16,26 +16,37 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           
-      - name: Generate Debug Keystore
+      - name: Generate Release Keystore
         run: |
           mkdir -p app
-          # Supprimer l'ancien keystore s'il existe
-          rm -f app/debug.keystore
-          # Générer un nouveau keystore
+          rm -f app/release.keystore
+          # Générer un keystore de release valide
           keytool -genkey -v \
-            -keystore app/debug.keystore \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
+            -keystore app/release.keystore \
+            -storepass magiccontrol123 \
+            -alias magiccontrol \
+            -keypass magiccontrol123 \
             -keyalg RSA \
             -keysize 2048 \
             -validity 10000 \
-            -dname "CN=Android Debug, O=Android, C=US"
+            -dname "CN=MagicControl, OU=Development, O=MagicControl, L=Paris, ST=France, C=FR"
+          
+      - name: Configure signing in gradle.properties
+        run: |
+          echo "RELEASE_STORE_FILE=release.keystore" >> gradle.properties
+          echo "RELEASE_STORE_PASSWORD=magiccontrol123" >> gradle.properties
+          echo "RELEASE_KEY_ALIAS=magiccontrol" >> gradle.properties
+          echo "RELEASE_KEY_PASSWORD=magiccontrol123" >> gradle.properties
           
       - name: Build Android APK
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease
+          
+      - name: Verify APK signature
+        run: |
+          # Vérifier que l'APK est bien signé
+          apksigner verify --verbose app/build/outputs/apk/release/app-release.apk
           
       - name: Find and Upload APK
         run: |
@@ -45,18 +56,14 @@ jobs:
           APK_PATH=$(find app/build -name "*release*.apk" | grep -v "unsigned" | head -1)
           
           if [ -z "$APK_PATH" ]; then
-            echo "📦 Aucun APK signé trouvé, utilisation de l'APK non signé"
-            APK_PATH=$(find app/build -name "*release*.apk" | head -1)
-          fi
-          
-          if [ -n "$APK_PATH" ]; then
-            echo "✅ APK trouvé : $APK_PATH"
-            cp "$APK_PATH" magiccontrol-release.apk
-            echo "📊 Taille du fichier : $(du -h magiccontrol-release.apk | cut -f1)"
-          else
-            echo "❌ Aucun APK trouvé !"
+            echo "❌ Aucun APK signé trouvé !"
             exit 1
           fi
+          
+          echo "✅ APK signé trouvé : $APK_PATH"
+          cp "$APK_PATH" magiccontrol-release.apk
+          echo "📊 Taille du fichier : $(du -h magiccontrol-release.apk | cut -f1)"
+          echo "✅ APK devrait être installable maintenant"
           
       - name: Upload APK
         uses: actions/upload-artifact@v4
