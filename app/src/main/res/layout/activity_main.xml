@@ -32,17 +32,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Texte d'état - Modifié pour refléter l'écoute permanente -->
+    <!-- Texte d'état -->
     <TextView
         android:id="@+id/status_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Écoute permanente activée\nDites \"Magic\" pour commencer"
+        android:text="Ecoute permanente activee. Dites Magic pour commencer."
         android:textColor="@color/text_secondary"
         android:textSize="16sp"
         android:textAlignment="center"
-        android:lineSpacingExtra="4sp"
         app:layout_constraintTop_toBottomOf="@id/logo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -53,7 +52,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="🎤 Écoute en cours..."
+        android:text="Micro ecoute..."
         android:textColor="@color/github_accent"
         android:textSize="14sp"
         android:visibility="gone"
