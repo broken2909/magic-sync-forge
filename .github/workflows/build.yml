@@ -19,6 +19,9 @@ jobs:
       - name: Generate Debug Keystore
         run: |
           mkdir -p app
+          # Supprimer l'ancien keystore s'il existe
+          rm -f app/debug.keystore
+          # Générer un nouveau keystore
           keytool -genkey -v \
             -keystore app/debug.keystore \
             -storepass android \
@@ -39,7 +42,6 @@ jobs:
           echo "🔍 Recherche des fichiers APK..."
           find app/build -name "*.apk" | head -10
           
-          # Chercher d'abord un APK signé, sinon prendre l'unsigned
           APK_PATH=$(find app/build -name "*release*.apk" | grep -v "unsigned" | head -1)
           
           if [ -z "$APK_PATH" ]; then
