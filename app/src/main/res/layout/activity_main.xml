@@ -74,6 +74,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Supprimer le bouton micro - l'écoute est permanente -->
-
 </androidx.constraintlayout.widget.ConstraintLayout>
