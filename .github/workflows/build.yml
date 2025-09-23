@@ -14,24 +14,41 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Build signed APK
+      - name: Create signing configuration
         run: |
           chmod +x gradlew
-          rm -f app/debug.keystore
-          keytool -genkey -v -keystore app/debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug, O=Android, C=US"
+          # Créer un vrai keystore de release (pas debug)
+          rm -f app/release.keystore
+          keytool -genkey -v \
+            -keystore app/release.keystore \
+            -alias magiccontrol \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass release123 \
+            -keypass release123 \
+            -dname "CN=MagicControl, OU=Android, O=MagicControl, L=Paris, C=FR"
+          
+          # Créer un fichier de properties pour la signature
+          cat > app/signing.properties << 'PROPERTIES'
+storeFile=release.keystore
+storePassword=release123
+keyAlias=magiccontrol
+keyPassword=release123
+PROPERTIES
+      - name: Build properly signed APK
+        run: |
           ./gradlew assembleRelease
       - name: Find and Upload APK
         run: |
-          echo "🔍 Recherche des fichiers APK..."
-          find app/build -name "*.apk" | head -10
-          # Prendre le premier APK release trouvé
-          APK_PATH=$(find app/build -name "*release*.apk" | head -1)
+          APK_PATH=$(find app/build -name "*release*.apk" | grep -v "unsigned" | head -1)
           if [ -n "$APK_PATH" ]; then
-            echo "✅ APK trouvé : $APK_PATH"
+            echo "✅ APK signé trouvé : $APK_PATH"
             cp "$APK_PATH" magiccontrol-release.apk
-            echo "📊 Taille du fichier : $(du -h magiccontrol-release.apk | cut -f1)"
+            echo "📊 Taille : $(du -h magiccontrol-release.apk | cut -f1)"
           else
-            echo "❌ Aucun APK trouvé !"
+            echo "❌ Aucun APK signé trouvé !"
+            find app/build -name "*.apk" | head -10
             exit 1
           fi
       - name: Upload APK
