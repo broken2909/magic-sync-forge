@@ -29,13 +29,11 @@ jobs:
             -keypass release123 \
             -dname "CN=MagicControl, OU=Android, O=MagicControl, L=Paris, C=FR"
           
-          # Créer un fichier de properties pour la signature
-          cat > app/signing.properties << 'PROPERTIES'
-storeFile=release.keystore
-storePassword=release123
-keyAlias=magiccontrol
-keyPassword=release123
-PROPERTIES
+          # CORRECTION : Créer le fichier properties avec echo
+          echo "storeFile=release.keystore" > app/signing.properties
+          echo "storePassword=release123" >> app/signing.properties
+          echo "keyAlias=magiccontrol" >> app/signing.properties
+          echo "keyPassword=release123" >> app/signing.properties
       - name: Build properly signed APK
         run: |
           ./gradlew assembleRelease
