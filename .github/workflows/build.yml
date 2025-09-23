@@ -14,43 +14,19 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Create signing configuration
+      - name: Create and configure signing
         run: |
           chmod +x gradlew
-          # Créer un vrai keystore de release (pas debug)
-          rm -f app/release.keystore
-          keytool -genkey -v \
-            -keystore app/release.keystore \
-            -alias magiccontrol \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass release123 \
-            -keypass release123 \
-            -dname "CN=MagicControl, OU=Android, O=MagicControl, L=Paris, C=FR"
-          
-          # CORRECTION : Créer le fichier properties avec echo
-          echo "storeFile=release.keystore" > app/signing.properties
-          echo "storePassword=release123" >> app/signing.properties
-          echo "keyAlias=magiccontrol" >> app/signing.properties
-          echo "keyPassword=release123" >> app/signing.properties
-      - name: Build properly signed APK
+          # Générer le keystore
+          keytool -genkey -v -keystore app/release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000 -storepass release123 -keypass release123 -dname "CN=MagicControl"
+          # Modifier build.gradle pour inclure la signature
+          sed -i '/buildTypes {/a\        release {\n            minifyEnabled false\n            proguardFiles getDefaultProguardFile('\''proguard-android-optimize.txt'\''), '\''proguard-rules.pro'\''\n            signingConfig signingConfigs.release\n        }' app/build.gradle
+          sed -i '/android {/a\    signingConfigs {\n        release {\n            storeFile file("release.keystore")\n            storePassword "release123"\n            keyAlias "release"\n            keyPassword "release123"\n        }\n    }' app/build.gradle
+      - name: Build signed APK
         run: |
           ./gradlew assembleRelease
-      - name: Find and Upload APK
-        run: |
-          APK_PATH=$(find app/build -name "*release*.apk" | grep -v "unsigned" | head -1)
-          if [ -n "$APK_PATH" ]; then
-            echo "✅ APK signé trouvé : $APK_PATH"
-            cp "$APK_PATH" magiccontrol-release.apk
-            echo "📊 Taille : $(du -h magiccontrol-release.apk | cut -f1)"
-          else
-            echo "❌ Aucun APK signé trouvé !"
-            find app/build -name "*.apk" | head -10
-            exit 1
-          fi
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: magiccontrol-android
-          path: magiccontrol-release.apk
+          path: app/build/outputs/apk/release/app-release.apk
