@@ -17,13 +17,25 @@ jobs:
       - name: Build signed APK
         run: |
           chmod +x gradlew
-          # Supprimer l'ancien keystore s'il existe
           rm -f app/debug.keystore
-          # Générer un nouveau keystore
           keytool -genkey -v -keystore app/debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug, O=Android, C=US"
           ./gradlew assembleRelease
+      - name: Find and Upload APK
+        run: |
+          echo "🔍 Recherche des fichiers APK..."
+          find app/build -name "*.apk" | head -10
+          # Prendre le premier APK release trouvé
+          APK_PATH=$(find app/build -name "*release*.apk" | head -1)
+          if [ -n "$APK_PATH" ]; then
+            echo "✅ APK trouvé : $APK_PATH"
+            cp "$APK_PATH" magiccontrol-release.apk
+            echo "📊 Taille du fichier : $(du -h magiccontrol-release.apk | cut -f1)"
+          else
+            echo "❌ Aucun APK trouvé !"
+            exit 1
+          fi
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: magiccontrol-android
-          path: app/build/outputs/apk/release/app-release.apk
+          path: magiccontrol-release.apk
