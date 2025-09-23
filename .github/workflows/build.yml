@@ -9,18 +9,20 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up JDK 11
         uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
-          
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Generate Release Keystore
         run: |
           mkdir -p app
           rm -f app/release.keystore
-          # Générer un keystore de release valide
           keytool -genkey -v \
             -keystore app/release.keystore \
             -storepass magiccontrol123 \
@@ -30,41 +32,35 @@ jobs:
             -keysize 2048 \
             -validity 10000 \
             -dname "CN=MagicControl, OU=Development, O=MagicControl, L=Paris, ST=France, C=FR"
-          
+
       - name: Configure signing in gradle.properties
         run: |
           echo "RELEASE_STORE_FILE=release.keystore" >> gradle.properties
           echo "RELEASE_STORE_PASSWORD=magiccontrol123" >> gradle.properties
           echo "RELEASE_KEY_ALIAS=magiccontrol" >> gradle.properties
           echo "RELEASE_KEY_PASSWORD=magiccontrol123" >> gradle.properties
-          
-      - name: Build Android APK
+
+      - name: Build signed Android APK
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease
-          
+
       - name: Verify APK signature
         run: |
-          # Vérifier que l'APK est bien signé
+          # apksigner est maintenant disponible via l'action setup-android
           apksigner verify --verbose app/build/outputs/apk/release/app-release.apk
-          
+
       - name: Find and Upload APK
         run: |
-          echo "🔍 Recherche des fichiers APK..."
-          find app/build -name "*.apk" | head -10
-          
           APK_PATH=$(find app/build -name "*release*.apk" | grep -v "unsigned" | head -1)
-          
           if [ -z "$APK_PATH" ]; then
             echo "❌ Aucun APK signé trouvé !"
             exit 1
           fi
-          
           echo "✅ APK signé trouvé : $APK_PATH"
           cp "$APK_PATH" magiccontrol-release.apk
           echo "📊 Taille du fichier : $(du -h magiccontrol-release.apk | cut -f1)"
-          echo "✅ APK devrait être installable maintenant"
-          
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
