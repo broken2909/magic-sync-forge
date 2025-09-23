@@ -16,28 +16,34 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           
-      - name: Build Android APK
+      - name: Build signed APK
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease
+          # Créer un keystore de debug pour signer l'APK
+          keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2044 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug, O=Android, C=US"
+          
+          # Build avec signature
+          ./gradlew assembleRelease -Pandroid.injected.signing.store.file=debug.keystore -Pandroid.injected.signing.store.password=android -Pandroid.injected.signing.key.alias=androiddebugkey -Pandroid.injected.signing.key.password=android
           
       - name: Find and Upload APK
         run: |
           echo "🔍 Recherche des fichiers APK..."
           find app/build -name "*.apk" | head -10
           
-          # Chercher d'abord un APK signé, sinon prendre l'unsigned
+          # Prendre l'APK release signé
           APK_PATH=$(find app/build -name "*release*.apk" | grep -v "unsigned" | head -1)
           
           if [ -z "$APK_PATH" ]; then
-            echo "📦 Aucun APK signé trouvé, utilisation de l'APK non signé"
+            echo "📦 Utilisation du premier APK trouvé"
             APK_PATH=$(find app/build -name "*release*.apk" | head -1)
           fi
           
           if [ -n "$APK_PATH" ]; then
             echo "✅ APK trouvé : $APK_PATH"
             cp "$APK_PATH" magiccontrol-release.apk
-            echo "📊 Taille du fichier : $(du -h magiccontrol-release.apk | cut -f1)"
+            echo "📊 Taille : $(du -h magiccontrol-release.apk | cut -f1)"
+            # Vérifier la signature
+            apksigner verify --verbose magiccontrol-release.apk || echo "⚠️ Signature à vérifier"
           else
             echo "❌ Aucun APK trouvé !"
             exit 1
