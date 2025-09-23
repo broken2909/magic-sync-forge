@@ -17,7 +17,9 @@ jobs:
       - name: Build signed APK
         run: |
           chmod +x gradlew
-          # Générer le keystore dans le bon répertoire (app/)
+          # Supprimer l'ancien keystore s'il existe
+          rm -f app/debug.keystore
+          # Générer un nouveau keystore
           keytool -genkey -v -keystore app/debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug, O=Android, C=US"
           ./gradlew assembleRelease
       - name: Upload APK
