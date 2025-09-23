@@ -3,34 +3,61 @@ name: Build MagicControl
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+  build-android:
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Set up JDK 11
-      uses: actions/setup-java@v4
-      with:
-        java-version: '11'
-        distribution: 'temurin'
-
-    - name: Build signed APK
-      run: |
-        chmod +x gradlew
-        # Générer un keystore de debug
-        keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug, O=Android, C=US"
-        # Construire l'APK signé
-        ./gradlew clean assembleRelease -Pandroid.injected.signing.store.file=debug.keystore -Pandroid.injected.signing.store.password=android -Pandroid.injected.signing.key.alias=androiddebugkey -Pandroid.injected.signing.key.password=android
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: magiccontrol-app
-        path: app/build/outputs/apk/release/*.apk
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          
+      - name: Generate Debug Keystore
+        run: |
+          mkdir -p app
+          keytool -genkey -v \
+            -keystore app/debug.keystore \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug, O=Android, C=US"
+          
+      - name: Build Android APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease
+          
+      - name: Find and Upload APK
+        run: |
+          echo "🔍 Recherche des fichiers APK..."
+          find app/build -name "*.apk" | head -10
+          
+          # Chercher d'abord un APK signé, sinon prendre l'unsigned
+          APK_PATH=$(find app/build -name "*release*.apk" | grep -v "unsigned" | head -1)
+          
+          if [ -z "$APK_PATH" ]; then
+            echo "📦 Aucun APK signé trouvé, utilisation de l'APK non signé"
+            APK_PATH=$(find app/build -name "*release*.apk" | head -1)
+          fi
+          
+          if [ -n "$APK_PATH" ]; then
+            echo "✅ APK trouvé : $APK_PATH"
+            cp "$APK_PATH" magiccontrol-release.apk
+            echo "📊 Taille du fichier : $(du -h magiccontrol-release.apk | cut -f1)"
+          else
+            echo "❌ Aucun APK trouvé !"
+            exit 1
+          fi
+          
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: magiccontrol-android
+          path: magiccontrol-release.apk
