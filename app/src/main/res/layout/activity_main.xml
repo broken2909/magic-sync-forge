@@ -32,28 +32,31 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Texte d'état -->
+    <!-- Texte d'état - Modifié pour refléter l'écoute permanente -->
     <TextView
         android:id="@+id/status_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="@string/welcome_message"
+        android:text="Écoute permanente activée\nDites \"Magic\" pour commencer"
         android:textColor="@color/text_secondary"
         android:textSize="16sp"
+        android:textAlignment="center"
+        android:lineSpacingExtra="4sp"
         app:layout_constraintTop_toBottomOf="@id/logo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Bouton vocal -->
-    <ImageButton
-        android:id="@+id/voice_button"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="48dp"
-        android:src="@drawable/ic_mic"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/voice_button_desc"
+    <!-- Indicateur d'écoute -->
+    <TextView
+        android:id="@+id/listening_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="🎤 Écoute en cours..."
+        android:textColor="@color/github_accent"
+        android:textSize="14sp"
+        android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/status_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -63,12 +66,14 @@
         android:id="@+id/settings_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="48dp"
         android:text="@string/settings"
         android:textColor="@color/text"
         android:backgroundTint="@color/accent"
-        app:layout_constraintTop_toBottomOf="@id/voice_button"
+        app:layout_constraintTop_toBottomOf="@id/listening_indicator"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Supprimer le bouton micro - l'écoute est permanente -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

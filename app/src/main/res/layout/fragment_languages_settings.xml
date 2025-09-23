@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Configuration TTS -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Synthèse vocale (TTS)"
+            android:textColor="@color/github_accent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/surface"
+            android:padding="16dp"
+            android:elevation="2dp"
+            android:layout_marginBottom="24dp">
+
+            <Switch
+                android:id="@+id/system_tts_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Utiliser les langues TTS du système"
+                android:textColor="@color/text"
+                android:checked="true"
+                android:thumbTint="@color/accent"
+                android:trackTint="@color/border" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Langue TTS personnalisée"
+                android:textColor="@color/text"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:visibility="gone" />
+
+            <Spinner
+                android:id="@+id/tts_language_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:visibility="gone"
+                android:backgroundTint="@color/accent" />
+
+        </LinearLayout>
+
+        <!-- Langue de reconnaissance -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Langue de reconnaissance vocale"
+            android:textColor="@color/github_accent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/surface"
+            android:padding="16dp"
+            android:elevation="2dp"
+            android:layout_marginBottom="24dp">
+
+            <RadioGroup
+                android:id="@+id/language_radio_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/language_french"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Français"
+                    android:textColor="@color/text"
+                    android:checked="true"
+                    android:buttonTint="@color/accent" />
+
+                <RadioButton
+                    android:id="@+id/language_english"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="English"
+                    android:textColor="@color/text"
+                    android:layout_marginTop="12dp"
+                    android:buttonTint="@color/accent" />
+
+                <RadioButton
+                    android:id="@+id/language_spanish"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Español"
+                    android:textColor="@color/text"
+                    android:layout_marginTop="12dp"
+                    android:buttonTint="@color/accent" />
+
+            </RadioGroup>
+
+        </LinearLayout>
+
+        <!-- Mot d'éveil personnalisé -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Mot d'éveil personnalisé"
+            android:textColor="@color/github_accent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/surface"
+            android:padding="16dp"
+            android:elevation="2dp">
+
+            <EditText
+                android:id="@+id/wake_word_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="magic"
+                android:textColor="@color/text"
+                android:textColorHint="@color/text_secondary"
+                android:backgroundTint="@color/accent"
+                android:maxLines="1" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Mot-clé pour activer la reconnaissance vocale"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="8dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
