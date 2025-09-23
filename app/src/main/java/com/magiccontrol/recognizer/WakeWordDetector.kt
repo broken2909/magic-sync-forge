@@ -1,6 +1,7 @@
 package com.magiccontrol.recognizer
 
 import android.content.Context
+import android.content.Intent
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Handler
