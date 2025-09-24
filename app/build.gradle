@@ -11,6 +11,21 @@ android {
     lintOptions {
         abortOnError false
     }
+    
+    // Options pour éviter les erreurs de métadonnées Kotlin
+    kotlinOptions {
+        jvmTarget = '1.8'
+        freeCompilerArgs += [
+            "-Xskip-metadata-version-check",
+            "-Xskip-prerelease-check"
+        ]
+    }
+    
+    // Options de compilation pour éviter les erreurs D8
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
     signingConfigs {
         release {
@@ -42,28 +57,20 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.10.1'
+    // Utiliser des versions compatibles entre elles
+    implementation 'androidx.core:core-ktx:1.9.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.preference:preference-ktx:1.2.0'
-    implementation 'androidx.activity:activity-ktx:1.7.2'
-    implementation 'androidx.fragment:fragment-ktx:1.6.1'
+    implementation 'androidx.activity:activity-ktx:1.7.0'
+    implementation 'androidx.fragment:fragment-ktx:1.5.7'
     
     // Vosk
-    implementation 'net.java.dev.jna:jna:5.13.0@aar'
+    implementation 'net.java.dev.jna:jna:5.12.1@aar'
     implementation(name: 'vosk-android', ext: 'aar')
     
     testImplementation 'junit:junit:4.13.2'
