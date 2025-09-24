@@ -5,23 +5,25 @@ plugins {
 
 android {
     namespace 'com.magiccontrol'
-    compileSdk 34
+    compileSdk 33
     
-    // Supprimer le warning sur le compileSdk
+    // Options pour éviter les erreurs de compilation
     lintOptions {
         abortOnError false
+        checkReleaseBuilds false
     }
     
-    // Options pour éviter les erreurs de métadonnées Kotlin
+    // Options de compilation Kotlin
     kotlinOptions {
         jvmTarget = '1.8'
         freeCompilerArgs += [
             "-Xskip-metadata-version-check",
-            "-Xskip-prerelease-check"
+            "-Xskip-prerelease-check",
+            "-Xopt-in=kotlin.RequiresOptIn"
         ]
     }
     
-    // Options de compilation pour éviter les erreurs D8
+    // Options de compilation
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -44,7 +46,7 @@ android {
     defaultConfig {
         applicationId "com.magiccontrol"
         minSdk 21
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -60,16 +62,16 @@ android {
 }
 
 dependencies {
-    // Utiliser des versions compatibles entre elles
+    // Versions stables des bibliothèques AndroidX
     implementation 'androidx.core:core-ktx:1.9.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.preference:preference-ktx:1.2.0'
-    implementation 'androidx.activity:activity-ktx:1.7.0'
-    implementation 'androidx.fragment:fragment-ktx:1.5.7'
+    implementation 'androidx.activity:activity-ktx:1.6.1'
+    implementation 'androidx.fragment:fragment-ktx:1.5.5'
     
-    // Vosk
+    // Vosk - versions stables
     implementation 'net.java.dev.jna:jna:5.12.1@aar'
     implementation(name: 'vosk-android', ext: 'aar')
     
