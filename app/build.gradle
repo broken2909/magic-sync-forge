@@ -4,6 +4,7 @@ plugins {
 }
 
 android {
+    namespace 'com.magiccontrol'
     compileSdk 34
 
     signingConfigs {
