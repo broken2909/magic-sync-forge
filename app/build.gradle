@@ -27,7 +27,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.magiccontrol"
+        applicationId "com.magiccontrol'
         minSdk 21
         targetSdk 34
         versionCode 1
@@ -50,15 +50,6 @@ android {
     
     kotlinOptions {
         jvmTarget = '1.8'
-    }
-}
-
-repositories {
-    google()
-    mavenCentral()
-    maven { url "https://jitpack.io" }
-    flatDir {
-        dirs 'libs'
     }
 }
 
