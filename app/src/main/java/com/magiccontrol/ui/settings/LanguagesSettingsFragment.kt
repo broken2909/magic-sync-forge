@@ -1,4 +1,5 @@
 package com.magiccontrol.ui.settings
+import com.magiccontrol.R
 
 import android.os.Bundle
 import android.view.LayoutInflater
