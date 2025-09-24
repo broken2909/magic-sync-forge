@@ -16,7 +16,7 @@ class GeneralSettingsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        prefs = PreferencesManager()
+        prefs = PreferencesManager
         
         val view = inflater.inflate(R.layout.fragment_general_settings, container, false)
         

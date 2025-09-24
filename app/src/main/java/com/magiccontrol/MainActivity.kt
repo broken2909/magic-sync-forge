@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getWakeWord(): String {
-        val prefs = com.magiccontrol.utils.PreferencesManager()
+        val prefs = com.magiccontrol.utils.PreferencesManager
         return prefs.getWakeWord(this)
     }
 }

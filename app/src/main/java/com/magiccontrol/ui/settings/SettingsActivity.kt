@@ -40,12 +40,4 @@ class SettingsActivity : AppCompatActivity() {
     }
 }
 
-class GeneralSettingsFragment : Fragment() {
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return android.widget.TextView(requireContext()).apply {
-            text = "Paramètres généraux"
-            textSize = 18f
-            setPadding(50, 50, 50, 50)
-        }
-    }
 }
