@@ -7,20 +7,6 @@ android {
     compileSdk 34
     namespace 'com.magiccontrol'
 
-    signingConfigs {
-        release {
-            def keystorePropertiesFile = rootProject.file("app/keystore.properties")
-            if (keystorePropertiesFile.exists()) {
-                def keystoreProperties = new Properties()
-                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
-            }
-        }
-    }
-
     defaultConfig {
         applicationId "com.magiccontrol"
         minSdk 21
@@ -34,7 +20,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
         }
     }
     
@@ -57,11 +42,7 @@ dependencies {
     implementation 'androidx.activity:activity-ktx:1.7.2'
     implementation 'androidx.fragment:fragment-ktx:1.6.1'
     
-    // Vosk
+    // Vosk - utilise le fichier existant dans libs/
     implementation 'net.java.dev.jna:jna:5.13.0@aar'
-    implementation(name: 'vosk-android', ext: 'aar')
-    
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    implementation files('../libs/vosk-android.aar')
 }
