@@ -22,12 +22,15 @@ jobs:
           # Modifier build.gradle pour inclure la signature
           sed -i '/buildTypes {/a\        release {\n            minifyEnabled false\n            proguardFiles getDefaultProguardFile('\''proguard-android-optimize.txt'\''), '\''proguard-rules.pro'\''\n            signingConfig signingConfigs.release\n        }' app/build.gradle
           sed -i '/android {/a\    signingConfigs {\n        release {\n            storeFile file("release.keystore")\n            storePassword "release123"\n            keyAlias "release"\n            keyPassword "release123"\n        }\n    }' app/build.gradle
-      - name: Generate Resources First
+      - name: Build with detailed logs
         run: |
-          ./gradlew clean :app:generateReleaseResources --stacktrace
-      - name: Build signed APK
-        run: |
-          ./gradlew assembleRelease --stacktrace
+          ./gradlew clean assembleRelease --info --stacktrace 2>&1 | tee build.log
+          echo "=== FIN DU BUILD ==="
+      - name: Upload build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: build.log
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
