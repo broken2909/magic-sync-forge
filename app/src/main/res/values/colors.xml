@@ -1,29 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Couleurs GitHub Dark -->
-    <color name="github_bg">#0d1117</color>
-    <color name="github_surface">#161b22</color>
-    <color name="github_elevated">#21262d</color>
-    <color name="github_border">#30363d</color>
-    <color name="github_text">#c9d1d9</color>
-    <color name="github_text_secondary">#8b949e</color>
-    <color name="github_accent">#58a6ff</color>
-    <color name="github_warning">#d29922</color>
-    <color name="github_error">#f85149</color>
-
-    <!-- Application -->
-    <color name="primary">@color/github_accent</color>
-    <color name="background">@color/github_bg</color>
-    <color name="surface">@color/github_surface</color>
-    <color name="border">@color/github_border</color>
-    <color name="text">@color/github_text</color>
-    <color name="text_secondary">@color/github_text_secondary</color>
-    <color name="accent">@color/github_accent</color>
-    <color name="warning">@color/github_warning</color>
-    <color name="error">@color/github_error</color>
-
-    <!-- Navigation -->
-    <color name="nav_background">@color/github_surface</color>
-    <color name="nav_item_selected">@color/github_accent</color>
-    <color name="nav_item_text">@color/github_text</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
 </resources>
