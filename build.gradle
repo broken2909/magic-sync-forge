@@ -10,16 +10,6 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        flatDir {
-            dirs 'app/libs'
-        }
-    }
-}
-
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
