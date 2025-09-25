@@ -32,14 +32,6 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    
-    // S'assurer que l'APK est généré avec le bon nom
-    applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            def fileName = "app-${variant.name}.apk"
-            output.outputFile = new File("$project.buildDir/outputs/apk/${variant.name}", fileName)
-        }
-    }
 }
 
 dependencies {
