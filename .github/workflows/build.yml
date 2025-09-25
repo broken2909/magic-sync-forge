@@ -22,21 +22,31 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+      
     - name: Build with Gradle
       run: ./gradlew build
       
     - name: Build APK
       run: ./gradlew assembleRelease
       
-    - name: Find APK
+    - name: Check APK file
       run: |
-        echo "APK files found:"
+        echo "Checking for APK files..."
         find app/build/outputs -name "*.apk" -type f
+        echo "APK file size:"
+        ls -la app/build/outputs/apk/release/app-release.apk
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: |
-          app/build/outputs/apk/release/app-release.apk
-          app/build/outputs/apk/release/*.apk
+        path: app/build/outputs/apk/release/app-release.apk
