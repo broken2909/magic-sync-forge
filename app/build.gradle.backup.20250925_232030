@@ -1,23 +1,26 @@
 plugins {
     id 'com.android.application'
+    id 'kotlin-android'
 }
 
 android {
+    namespace 'com.magiccontrol'
     compileSdk 31
 
     defaultConfig {
-        applicationId "com.magiccontrol"
+        applicationId 'com.magiccontrol'
         minSdk 21
         targetSdk 31
         versionCode 1
-        versionName "1.0"
+        versionName '1.0'
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -26,9 +29,23 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    
+    // Configuration pour s'assurer que l'APK est généré avec le bon nom
+    applicationVariants.all { variant ->
+        if (variant.buildType.name == 'release') {
+            variant.outputs.each { output ->
+                output.outputFileName = "app-release.apk"
+            }
+        }
+    }
 }
 
 dependencies {
+    implementation 'androidx.core:core-ktx:1.6.0'
     implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
