@@ -28,8 +28,15 @@ jobs:
     - name: Build APK
       run: ./gradlew assembleRelease
       
+    - name: Find APK
+      run: |
+        echo "APK files found:"
+        find app/build/outputs -name "*.apk" -type f
+        
     - name: Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: app/build/outputs/apk/release/app-release.apk
+        path: |
+          app/build/outputs/apk/release/app-release.apk
+          app/build/outputs/apk/release/*.apk
