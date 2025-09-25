@@ -1,36 +1,19 @@
-# Configuration ProGuard pour MagicControl
+# Add project specific ProGuard rules here.
+# You can control the set of applied configuration files using the
+# proguardFiles setting in build.gradle.
 
-# Conserver les classes Vosk
+# Keep Vosk classes
 -keep class org.vosk.** { *; }
--keep class net.java.dev.jna.** { *; }
+-keepclassmembers class org.vosk.** { *; }
 
-# Conserver les classes de modèle
--keepclassmembers class * {
-    public <methods>;
-}
+# Keep JNA classes
+-keep class com.sun.jna.** { *; }
+-keepclassmembers class com.sun.jna.** { *; }
 
-# Conserver les classes de service
--keep public class * extends android.app.Service
--keep public class * extends android.content.BroadcastReceiver
+# Keep app classes
+-keep class com.magiccontrol.** { *; }
+-keepclassmembers class com.magiccontrol.** { *; }
 
-# Conserver les activités
--keep public class * extends android.app.Activity
-
-# Conserver les vues
--keepclassmembers class * extends android.view.View {
-    public <init>(android.content.Context);
-    public <init>(android.content.Context, android.util.AttributeSet);
-    public <init>(android.content.Context, android.util.AttributeSet, int);
-    public void set*(...);
-}
-
-# Conserver les callbacks
--keepclassmembers class * {
-    void onClick*(...);
-}
-
-# Configuration Kotlin
--keep class kotlin.** { *; }
--keepclassmembers class **$WhenMappings {
-    <fields>;
-}
+# Ignore warnings
+-dontwarn org.vosk.**
+-dontwarn com.sun.jna.**
