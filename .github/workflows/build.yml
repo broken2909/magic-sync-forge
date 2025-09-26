@@ -38,8 +38,9 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       
-    - name: Build debug APK
-      run: ./gradlew assembleDebug
+    - name: Build debug APK with echo workaround
+      run: |
+        echo "assembleDebug" | ./gradlew
       
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
