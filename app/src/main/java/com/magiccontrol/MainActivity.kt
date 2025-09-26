@@ -1,11 +1,13 @@
 package com.magiccontrol
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.magiccontrol.ui.settings.SettingsActivity
 import com.magiccontrol.utils.WelcomeManager
 
 class MainActivity : AppCompatActivity() {
@@ -18,8 +20,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
+        // Configurer le bouton paramètres
+        setupSettingsButton()
+        
         // Vérifier et demander les permissions
         checkPermissions()
+    }
+    
+    private fun setupSettingsButton() {
+        val settingsButton = findViewById<android.widget.Button>(R.id.settings_button)
+        settingsButton.setOnClickListener {
+            val intent = Intent(this, SettingsActivity::class.java)
+            startActivity(intent)
+        }
     }
     
     private fun checkPermissions() {
