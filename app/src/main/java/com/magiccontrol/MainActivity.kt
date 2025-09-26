@@ -1,25 +1,54 @@
 package com.magiccontrol
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.magiccontrol.utils.PreferencesManager
-import com.magiccontrol.tts.TTSManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.magiccontrol.utils.WelcomeManager
 
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        private const val PERMISSION_REQUEST_CODE = 123
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
-        // Toast bref à chaque ouverture
-        Toast.makeText(this, "MagicControl activé", Toast.LENGTH_SHORT).show()
+        // Vérifier et demander les permissions
+        checkPermissions()
+    }
+    
+    private fun checkPermissions() {
+        val permissions = arrayOf(
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.MODIFY_AUDIO_SETTINGS
+        )
         
-        // Synthèse vocale uniquement à la première utilisation (gestion simple)
-        val prefs = getSharedPreferences("magic_control_prefs", MODE_PRIVATE)
-        if (prefs.getBoolean("first_launch", true)) {
-            TTSManager.speak(this, "Bienvenue dans MagicControl, votre assistant vocal offline")
-            prefs.edit().putBoolean("first_launch", false).apply()
+        val missingPermissions = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        
+        if (missingPermissions.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, missingPermissions.toTypedArray(), PERMISSION_REQUEST_CODE)
+        } else {
+            // Permissions déjà accordées - lancer le welcome
+            WelcomeManager.showWelcome(this)
+        }
+    }
+    
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                WelcomeManager.showWelcome(this)
+            } else {
+                // Permissions refusées - toast d'avertissement
+                android.widget.Toast.makeText(this, "Permissions requises pour MagicControl", android.widget.Toast.LENGTH_LONG).show()
+            }
         }
     }
 }
