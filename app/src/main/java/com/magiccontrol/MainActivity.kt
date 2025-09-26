@@ -15,12 +15,11 @@ class MainActivity : AppCompatActivity() {
         // Toast bref à chaque ouverture
         Toast.makeText(this, "MagicControl activé", Toast.LENGTH_SHORT).show()
         
-        // Synthèse vocale uniquement à la première utilisation
-        if (PreferencesManager.isFirstLaunch(this)) {
-            TTSManager.speak(this, "Bienvenue dans MagicControl, votre assistant vocal offline") {
-                // Une fois le message vocal terminé, marquer comme déjà lancé
-                PreferencesManager.setFirstLaunchComplete(this@MainActivity)
-            }
+        // Synthèse vocale uniquement à la première utilisation (gestion simple)
+        val prefs = getSharedPreferences("magic_control_prefs", MODE_PRIVATE)
+        if (prefs.getBoolean("first_launch", true)) {
+            TTSManager.speak(this, "Bienvenue dans MagicControl, votre assistant vocal offline")
+            prefs.edit().putBoolean("first_launch", false).apply()
         }
     }
 }
