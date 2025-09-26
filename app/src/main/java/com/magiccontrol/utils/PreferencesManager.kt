@@ -42,3 +42,16 @@ object PreferencesManager {
         getPreferences(context).edit().putInt("voice_speed", speed).apply()
     }
 }
+    /**
+     * Vérifie si c'est la première utilisation de l'application
+     */
+    fun isFirstLaunch(context: Context): Boolean {
+        return getPreferences(context).getBoolean("first_launch", true)
+    }
+
+    /**
+     * Marque que l'application a déjà été lancée
+     */
+    fun setFirstLaunchComplete(context: Context) {
+        getPreferences(context).edit().putBoolean("first_launch", false).apply()
+    }
