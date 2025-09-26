@@ -9,3 +9,10 @@ class VoiceButtonView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : AppCompatImageView(context, attrs, defStyleAttr)
+{
+    // Classe vide pour l'instant - à implémenter
+    init {
+        // Initialisation du bouton vocal
+        setImageResource(android.R.drawable.ic_btn_speak_now)
+    }
+}
