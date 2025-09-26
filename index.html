@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MagicControl - Contrôle vocal pour malvoyants</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #f0f6fc;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #238636, #2ea043);
+            border-radius: 20px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        h1 {
+            color: #238636;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #8b949e;
+            margin-bottom: 40px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            margin: 20px 0;
+        }
+        .vosk-status {
+            color: #f85149;
+            margin: 10px 0;
+        }
+        .loading {
+            color: #ffa657;
+        }
+        .ready {
+            color: #56d364;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎤</div>
+        <h1>MagicControl</h1>
+        <p class="subtitle">Assistant vocal offline pour personnes malvoyantes</p>
+        
+        <div class="status">
+            <div id="vosk-fr-status" class="vosk-status">❌ Modèle Vosk FR: Non chargé</div>
+            <div id="vosk-en-status" class="vosk-status">❌ Modèle Vosk EN: Non chargé</div>
+            <div id="audio-status" class="vosk-status">❌ Microphone: Non initialisé</div>
+        </div>
+        
+        <div id="recognition-result" style="margin-top: 30px; padding: 20px; background: #161b22; border-radius: 10px; min-height: 50px;">
+            <em>En attente de reconnaissance vocale...</em>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
