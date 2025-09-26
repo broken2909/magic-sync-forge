@@ -35,12 +35,13 @@ jobs:
         mkdir -p app/libs
         wget https://repo1.maven.org/maven2/com/alphacephei/vosk-android/0.3.32/vosk-android-0.3.32.aar -O app/libs/vosk-android.aar
         
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      
-    - name: Build debug APK
+    - name: Grant execute permission
       run: |
-        ./gradlew :app:assembleDebug
+        chmod +x gradlew
+        chmod +x build.sh
+        
+    - name: Build debug APK
+      run: ./build.sh
       
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
