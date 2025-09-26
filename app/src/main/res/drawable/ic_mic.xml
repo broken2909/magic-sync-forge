@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    
+    <!-- Microphone body -->
+    <path
+        android:fillColor="@color/github_accent"
+        android:pathData="M50,20 A15,15 0 0,1 65,35 L65,55 A15,15 0 0,1 35,55 L35,35 A15,15 0 0,1 50,20 Z"/>
+    
+    <!-- Microphone stand -->
+    <path
+        android:fillColor="@color/github_text"
+        android:pathData="M50,65 L50,80 M35,80 L65,80"/>
+    
+    <!-- Sound waves -->
+    <path
+        android:fillColor="none"
+        android:strokeColor="@color/github_accent"
+        android:strokeWidth="2"
+        android:pathData="M25,45 A25,25 0 0,1 75,45"/>
+    <path
+        android:fillColor="none"
+        android:strokeColor="@color/github_accent"
+        android:strokeWidth="2"
+        android:pathData="M20,45 A30,30 0 0,1 80,45"/>
+</vector>
