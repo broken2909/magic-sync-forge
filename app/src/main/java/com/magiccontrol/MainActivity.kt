@@ -10,10 +10,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         setupToolbar()
         setupButtons()
-        startWakeWordService()
+        // startWakeWordService() // DEBUG: Temporarily disabled
     }
 
     private fun setupToolbar() {
@@ -24,7 +23,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupButtons() {
         val voiceButton = findViewById<android.widget.ImageButton>(R.id.voice_button)
         val settingsButton = findViewById<android.widget.Button>(R.id.settings_button)
-
+        
         voiceButton.setOnClickListener {
             // TODO: Implement direct voice command
         }
