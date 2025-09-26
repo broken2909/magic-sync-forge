@@ -2,5 +2,8 @@
   "dependencies": {
     "@huggingface/transformers": "^3.7.3",
     "vosk-browser": "^0.0.8"
+  },
+  "scripts": {
+    "build:dev": "vite build --mode development"
   }
 }
