@@ -2,8 +2,6 @@ package com.magiccontrol.utils
 
 import android.content.Context
 import android.media.MediaPlayer
-import android.os.Handler
-import android.os.Looper
 import android.widget.Toast
 import java.util.Locale
 
@@ -14,8 +12,8 @@ object WelcomeManager {
     fun showWelcome(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_WELCOME, Context.MODE_PRIVATE)
 
-        // BIP bref et joyeux à chaque ouverture
-        playHappyBeep(context)
+        // Son personnalisé à chaque ouverture
+        playCustomSound(context)
         
         if (prefs.getBoolean(KEY_FIRST_LAUNCH, true)) {
             // Première utilisation - message vocal personnalisé
@@ -24,20 +22,14 @@ object WelcomeManager {
         }
     }
     
-    private fun playHappyBeep(context: Context) {
+    private fun playCustomSound(context: Context) {
         try {
-            // Utiliser le son de notification système simple
-            val soundUri = android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
-            val mediaPlayer = MediaPlayer.create(context, soundUri)
+            // Utiliser le son personnalisé téléchargé
+            val mediaPlayer = MediaPlayer.create(context, R.raw.welcome_sound)
             mediaPlayer?.setOnCompletionListener { player: MediaPlayer ->
                 player.release()
             }
-            // Jouer seulement 300ms pour un bip court
             mediaPlayer?.start()
-            Handler(Looper.getMainLooper()).postDelayed({
-                mediaPlayer?.stop()
-                mediaPlayer?.release()
-            }, 300)
         } catch (e: Exception) {
             // Fallback sur un toast visuel si le son échoue
             val systemLang = Locale.getDefault().language
@@ -47,15 +39,16 @@ object WelcomeManager {
                 else -> "MagicControl ready"
             }
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            android.util.Log.e("WelcomeManager", "Erreur son personnalisé: ${e.message}")
         }
     }
     
     private fun showFirstLaunchWelcome(context: Context) {
         val systemLang = Locale.getDefault().language
         val welcomeMessage = when {
-            systemLang.startsWith("fr") -> "Bienvenue dans MagicControl, votre assistant vocal offline. Dites le mot magique pour commencer."
-            systemLang.startsWith("en") -> "Welcome to MagicControl, your offline voice assistant. Say the magic word to begin."
-            else -> "Welcome to MagicControl. Say the magic word to begin."
+            systemLang.startsWith("fr") -> "Bienvenue dans MagicControl, votre assistant vocal offline. Dites Magic pour commencer."
+            systemLang.startsWith("en") -> "Welcome to MagicControl, your offline voice assistant. Say Magic to begin."
+            else -> "Welcome to MagicControl. Say Magic to begin."
         }
         
         // Utiliser le TTS existant mais de manière isolée
