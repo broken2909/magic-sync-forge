@@ -67,7 +67,8 @@
         android:text="@string/settings"
         android:textColor="@color/text"
         android:backgroundTint="@color/accent"
-        android:backgroundTint="@color/accent"
+        
+        
         app:layout_constraintTop_toBottomOf="@id/voice_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
