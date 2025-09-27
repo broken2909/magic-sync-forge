@@ -5,7 +5,7 @@
     <string name="voice_button_desc">Bouton de commande vocale</string>
     <string name="launch_app">Lancer l\'application</string>
     <string name="accessibility_service_label">Service d\'accessibilité MagicControl</string>
-   
+    
     <!-- Navigation -->
     <string name="home">Accueil</string>
     <string name="apps">Applications</string>
@@ -13,14 +13,14 @@
     <string name="settings">Paramètres</string>
     <string name="help">Aide</string>
     <string name="about">À propos</string>
-   
+
     <!-- Messages -->
     <string name="welcome_message">Dites \"Magic\" pour commencer</string>
     <string name="listening">Écoute en cours…</string>
     <string name="processing">Traitement…</string>
     <string name="error_audio">Erreur microphone</string>
     <string name="success_command">Commande exécutée</string>
-   
+
     <!-- Commandes système -->
     <string name="volume_up">Volume augmenté</string>
     <string name="volume_down">Volume baissé</string>
@@ -30,7 +30,7 @@
     <string name="bluetooth_off">Bluetooth désactivé</string>
     <string name="go_home">Retour à l\'accueil</string>
     <string name="go_back">Retour</string>
-</resources>
+
     <!-- Paramètres - Catégories -->
     <string name="language_settings">Langue et Voix</string>
     <string name="speech_recognition">Reconnaissance Vocale</string>
@@ -64,3 +64,4 @@
     <string name="bluetooth_control">Contrôle Bluetooth</string>
     <string name="auto_download">Téléchargement auto</string>
     <string name="auto_download_summary">Autoriser téléchargements automatiques</string>
+</resources>
