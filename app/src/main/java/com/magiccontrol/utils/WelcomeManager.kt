@@ -2,6 +2,8 @@ package com.magiccontrol.utils
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import java.util.Locale
 
@@ -12,8 +14,8 @@ object WelcomeManager {
     fun showWelcome(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_WELCOME, Context.MODE_PRIVATE)
 
-        // Son joyeux à chaque ouverture (remplace le toast vocal)
-        playHappySound(context)
+        // BIP bref et joyeux à chaque ouverture
+        playHappyBeep(context)
         
         if (prefs.getBoolean(KEY_FIRST_LAUNCH, true)) {
             // Première utilisation - message vocal personnalisé
@@ -22,15 +24,20 @@ object WelcomeManager {
         }
     }
     
-    private fun playHappySound(context: Context) {
+    private fun playHappyBeep(context: Context) {
         try {
-            // Son court et joyeux (son système de notification)
-            val notificationUri = android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
-            val mediaPlayer = MediaPlayer.create(context, notificationUri)
+            // Utiliser le son BIP court du système (beep simple)
+            val toneType = android.provider.Settings.System.DEFAULT_RINGTONE
+            val mediaPlayer = MediaPlayer.create(context, toneType)
             mediaPlayer?.setOnCompletionListener { player ->
                 player.release()
             }
+            // Jouer seulement 300ms pour un bip court
             mediaPlayer?.start()
+            Handler(Looper.getMainLooper()).postDelayed({
+                mediaPlayer?.stop()
+                mediaPlayer?.release()
+            }, 300)
         } catch (e: Exception) {
             // Fallback sur un toast visuel si le son échoue
             val systemLang = Locale.getDefault().language

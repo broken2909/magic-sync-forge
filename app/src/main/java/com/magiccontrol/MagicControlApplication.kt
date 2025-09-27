@@ -1,19 +1,12 @@
 package com.magiccontrol
 
 import android.app.Application
-import android.content.Context
+import com.magiccontrol.tts.TTSManager
 
 class MagicControlApplication : Application() {
-
-    companion object {
-        lateinit var instance: MagicControlApplication
-            private set
-    }
-
     override fun onCreate() {
         super.onCreate()
-        instance = this
+        // Initialiser le TTS au démarrage de l'application
+        TTSManager.initialize(this)
     }
-
-    fun getAppContext(): Context = applicationContext
 }
