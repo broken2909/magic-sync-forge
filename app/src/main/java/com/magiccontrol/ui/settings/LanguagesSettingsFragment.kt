@@ -2,6 +2,7 @@ package com.magiccontrol.ui.settings
 
 import android.os.Bundle
 import androidx.preference.PreferenceFragmentCompat
+import com.magiccontrol.R // IMPORT MANQUANT
 
 class LanguagesSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
