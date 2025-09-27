@@ -3,8 +3,9 @@ package com.magiccontrol
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -21,11 +22,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
-        // Configurer le bouton paramètres
+        // 1. LANÇER LE WELCOME IMMÉDIATEMENT (sans attendre les permissions)
+        WelcomeManager.showWelcome(this)
+        
+        // 2. Configurer le bouton paramètres
         setupSettingsButton()
         
-        // Vérifier et demander les permissions
-        checkPermissions()
+        // 3. Vérifier les permissions micro (en parallèle)
+        checkMicrophonePermission()
     }
     
     private fun setupSettingsButton() {
@@ -36,37 +40,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    private fun checkPermissions() {
-        val permissions = arrayOf(
+    private fun checkMicrophonePermission() {
+        val microphonePermissions = arrayOf(
             Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.MODIFY_AUDIO_SETTINGS,
-            Manifest.permission.ACCESS_WIFI_STATE,
-            Manifest.permission.CHANGE_WIFI_STATE,
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_ADMIN,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.MODIFY_AUDIO_SETTINGS
         )
         
-        val missingPermissions = permissions.filter {
+        val missingMicrophone = microphonePermissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
         
-        if (missingPermissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, missingPermissions.toTypedArray(), PERMISSION_REQUEST_CODE)
+        if (missingMicrophone.isNotEmpty()) {
+            // Demander la permission micro APRÈS le welcome
+            ActivityCompat.requestPermissions(this, missingMicrophone.toTypedArray(), PERMISSION_REQUEST_CODE)
         } else {
-            // Permissions déjà accordées - lancer le welcome
-            WelcomeManager.showWelcome(this)
+            // Micro déjà autorisé - lancer les fonctionnalités vocales
+            startVoiceFeatures()
         }
+    }
+    
+    private fun startVoiceFeatures() {
+        // Ici on lancera la détection du mot magique, etc.
+        android.widget.Toast.makeText(this, "Fonctionnalités vocales activées", android.widget.Toast.LENGTH_SHORT).show()
     }
     
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                WelcomeManager.showWelcome(this)
+            val microphoneGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+            
+            if (microphoneGranted) {
+                startVoiceFeatures()
             } else {
-                // Permissions refusées - toast d'avertissement
-                android.widget.Toast.makeText(this, "Permissions requises pour MagicControl", android.widget.Toast.LENGTH_LONG).show()
+                android.widget.Toast.makeText(this, "Fonctionnalités vocales limitées", android.widget.Toast.LENGTH_LONG).show()
             }
         }
     }
