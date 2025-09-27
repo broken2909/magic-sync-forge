@@ -24,8 +24,8 @@ object WelcomeManager {
     
     private fun playCustomSound(context: Context) {
         try {
-            // Utiliser le son personnalisé téléchargé
-            val mediaPlayer = MediaPlayer.create(context, R.raw.welcome_sound)
+            // Utiliser le son personnalisé via Resources
+            val mediaPlayer = MediaPlayer.create(context, android.net.Uri.parse("android.resource://com.magiccontrol/raw/welcome_sound"))
             mediaPlayer?.setOnCompletionListener { player: MediaPlayer ->
                 player.release()
             }
