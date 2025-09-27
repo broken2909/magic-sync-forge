@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.magiccontrol.service.WakeWordService
+import com.magiccontrol.ui.settings.SettingsActivity
 import com.magiccontrol.utils.WelcomeManager
 
 class MainActivity : AppCompatActivity() {
@@ -20,14 +21,25 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        
         // Welcome delayed pour TTS
         Handler(Looper.getMainLooper()).postDelayed({
             WelcomeManager.showWelcome(this)
         }, 1000)
-       
+        
         // Permissions micro seulement
         checkMicrophonePermission()
+        
+        // Configuration du bouton paramètres - LIAISON AJOUTÉE
+        setupSettingsButton()
+    }
+    
+    private fun setupSettingsButton() {
+        val settingsButton = findViewById<android.widget.Button>(R.id.settings_button)
+        settingsButton.setOnClickListener {
+            val intent = Intent(this, SettingsActivity::class.java)
+            startActivity(intent)
+        }
     }
     
     private fun checkMicrophonePermission() {
@@ -52,20 +64,8 @@ class MainActivity : AppCompatActivity() {
         try {
             val serviceIntent = Intent(this, WakeWordService::class.java)
             startService(serviceIntent)
-            
-            Handler(Looper.getMainLooper()).postDelayed({
-                android.widget.Toast.makeText(
-                    this, 
-                    "Magic Control activé. Dites 'magic' pour commencer.", 
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-            }, 500)
         } catch (e: Exception) {
-            android.widget.Toast.makeText(
-                this, 
-                "Erreur démarrage service: ${e.message}", 
-                android.widget.Toast.LENGTH_LONG
-            ).show()
+            android.widget.Toast.makeText(this, "Erreur démarrage service", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -75,11 +75,7 @@ class MainActivity : AppCompatActivity() {
             if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 startWakeWordService()
             } else {
-                android.widget.Toast.makeText(
-                    this, 
-                    "Permission microphone requise pour la reconnaissance vocale", 
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
+                android.widget.Toast.makeText(this, "Permission microphone requise", android.widget.Toast.LENGTH_LONG).show()
             }
         }
     }
