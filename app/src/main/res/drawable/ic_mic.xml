@@ -5,26 +5,42 @@
     android:viewportWidth="100"
     android:viewportHeight="100">
 
-    <!-- Base arrondie du micro -->
+    <!-- Base circulaire du micro (couleur de surface) -->
     <path
         android:fillColor="@color/github_surface"
-        android:pathData="M30,70 Q50,85 70,70 L70,75 Q50,90 30,75 Z"/>
+        android:strokeColor="@color/github_border"
+        android:strokeWidth="1"
+        android:pathData="M50,10 A40,40 0 1,1 50,90 A40,40 0 1,1 50,10 Z"/>
 
-    <!-- Corps principal du micro -->
+    <!-- Corps principal du micro (couleur accent) -->
     <path
         android:fillColor="@color/github_accent"
-        android:pathData="M40,30 L40,60 Q50,65 60,60 L60,30 Q50,25 40,30 Z"/>
+        android:pathData="M45,30 L45,55 A5,5 0 0,0 55,55 L55,30 A5,5 0 0,0 45,30 Z"/>
 
-    <!-- Grille du micro -->
+    <!-- Grille du micro (couleur texte) -->
     <path
-        android:fillColor="@color/github_text"
-        android:pathData="M45,35 L45,55 M50,35 L50,55 M55,35 L55,55"/>
+        android:strokeColor="@color/github_text"
+        android:strokeWidth="1"
+        android:pathData="M48,35 L48,50 M52,35 L52,50"/>
 
-    <!-- Onde sonore simple -->
+    <!-- Support du micro (couleur texte) -->
+    <path
+        android:strokeColor="@color/github_text"
+        android:strokeWidth="2"
+        android:pathData="M50,55 L50,65"/>
+
+    <!-- Onde sonore simple (couleur accent) -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="@color/github_accent"
-        android:strokeWidth="2"
-        android:pathData="M35,65 Q50,60 65,65"/>
+        android:strokeWidth="1.5"
+        android:pathData="M35,65 A15,15 0 0,1 65,65"/>
+        
+    <!-- Détail circulaire intérieur (couleur border) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="@color/github_border"
+        android:strokeWidth="0.5"
+        android:pathData="M50,20 A30,30 0 1,1 50,80 A30,30 0 1,1 50,20 Z"/>
 
 </vector>
