@@ -5,23 +5,26 @@
     android:viewportWidth="100"
     android:viewportHeight="100">
 
-    <!-- Microphone body -->
+    <!-- Base arrondie du micro -->
+    <path
+        android:fillColor="@color/github_surface"
+        android:pathData="M30,70 Q50,85 70,70 L70,75 Q50,90 30,75 Z"/>
+
+    <!-- Corps principal du micro -->
     <path
         android:fillColor="@color/github_accent"
-        android:pathData="M50,20 A15,15 0 0,1 65,35 L65,55 A15,15 0 0,1 35,55 L35,35 A15,15 0 0,1 50,20 Z"/>
+        android:pathData="M40,30 L40,60 Q50,65 60,60 L60,30 Q50,25 40,30 Z"/>
 
-    <!-- Microphone stand -->
+    <!-- Grille du micro -->
     <path
         android:fillColor="@color/github_text"
-        android:strokeColor="@color/github_text"
-        android:strokeWidth="2"
-        android:pathData="M50,65 L50,80 M35,80 L65,80"/>
+        android:pathData="M45,35 L45,55 M50,35 L50,55 M55,35 L55,55"/>
 
-    <!-- Une seule onde (celle collée au micro) -->
+    <!-- Onde sonore simple -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="@color/github_accent"
-        android:strokeWidth="3"
-        android:pathData="M30,45 A20,20 0 0,1 70,45"/>
+        android:strokeWidth="2"
+        android:pathData="M35,65 Q50,60 65,65"/>
 
 </vector>

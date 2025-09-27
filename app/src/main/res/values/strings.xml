@@ -31,3 +31,36 @@
     <string name="go_home">Retour à l\'accueil</string>
     <string name="go_back">Retour</string>
 </resources>
+    <!-- Paramètres - Catégories -->
+    <string name="language_settings">Langue et Voix</string>
+    <string name="speech_recognition">Reconnaissance Vocale</string>
+    <string name="device_control">Contrôle Appareil</string>
+    <string name="advanced_settings">Paramètres Avancés</string>
+
+    <!-- Langue et Voix -->
+    <string name="app_language">Langue de l\'application</string>
+    <string name="select_app_language">Choisir la langue utilisée</string>
+    <string name="voice_feedback">Feedback vocal</string>
+    <string name="voice_feedback_summary">Activer les retours vocaux</string>
+    <string name="voice_speed">Vitesse de la voix</string>
+    <string name="voice_speed_summary">Ajuster la vitesse de parole</string>
+
+    <!-- Reconnaissance Vocale -->
+    <string name="activation_keyword">Mot d\'activation</string>
+    <string name="activation_keyword_summary">Mot pour activer l\'assistant (défaut: Magic)</string>
+    <string name="sensitivity">Sensibilité</string>
+    <string name="sensitivity_summary">Sensibilité de la détection vocale</string>
+    <string name="download_languages">Télécharger langues</string>
+    <string name="download_languages_summary">Télécharger modèles de reconnaissance</string>
+    <string name="custom_download">Téléchargement personnalisé</string>
+    <string name="custom_download_summary">URL personnalisée pour modèle</string>
+
+    <!-- Contrôle Appareil -->
+    <string name="find_phone">Trouver le portable</string>
+    <string name="find_phone_summary">Sonner le téléphone si égaré</string>
+
+    <!-- Paramètres Avancés -->
+    <string name="wifi_control">Contrôle WiFi</string>
+    <string name="bluetooth_control">Contrôle Bluetooth</string>
+    <string name="auto_download">Téléchargement auto</string>
+    <string name="auto_download_summary">Autoriser téléchargements automatiques</string>
