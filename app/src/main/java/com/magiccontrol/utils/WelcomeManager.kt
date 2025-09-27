@@ -24,11 +24,12 @@ object WelcomeManager {
     
     private fun playHappySound(context: Context) {
         try {
-            // Son court et joyeux (utilise le son système par défaut)
-            val toneType = android.provider.Settings.System.NOTIFICATION_SOUND
-            val soundUri = android.provider.Settings.System.getDefaultUri(toneType)
-            val mediaPlayer = MediaPlayer.create(context, soundUri)
-            mediaPlayer?.setOnCompletionListener { it.release() }
+            // Son court et joyeux (son système de notification)
+            val notificationUri = android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
+            val mediaPlayer = MediaPlayer.create(context, notificationUri)
+            mediaPlayer?.setOnCompletionListener { player ->
+                player.release()
+            }
             mediaPlayer?.start()
         } catch (e: Exception) {
             // Fallback sur un toast visuel si le son échoue
