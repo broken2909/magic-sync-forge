@@ -19,9 +19,6 @@ object SystemIntegration {
     fun handleSystemCommand(context: Context, command: String) {
         Log.d(TAG, "Traitement de la commande: $command")
         
-        // Récupérer le mot-clé personnalisé
-        val activationKeyword = PreferencesManager.getActivationKeyword(context)
-        
         when {
             command.contains("volume", ignoreCase = true) ->
                 handleVolumeCommand(context, command)
@@ -46,7 +43,7 @@ object SystemIntegration {
             command.contains("arrête", ignoreCase = true) ->
                 stopFindPhoneFeature(context)
             else ->
-                TTSManager(context).speak(getLocalizedMessage("command_not_recognized"))
+                TTSManager(context).speak(getLocalizedMessage(context, "command_not_recognized"))
         }
     }
 
@@ -57,7 +54,7 @@ object SystemIntegration {
         isFindingPhone = true
         val keyword = PreferencesManager.getActivationKeyword(context)
         
-        val message = getLocalizedMessage("find_phone_activated").replace("{keyword}", keyword)
+        val message = getLocalizedMessage(context, "find_phone_activated").replace("{keyword}", keyword)
         TTSManager(context).speak(message)
         
         try {
@@ -70,7 +67,7 @@ object SystemIntegration {
             findPhoneMediaPlayer?.start()
         } catch (e: Exception) {
             Log.e(TAG, "Erreur lecture son recherche téléphone", e)
-            TTSManager(context).speak(getLocalizedMessage("sound_error"))
+            TTSManager(context).speak(getLocalizedMessage(context, "sound_error"))
             isFindingPhone = false
         }
     }
@@ -83,15 +80,14 @@ object SystemIntegration {
         findPhoneMediaPlayer?.release()
         findPhoneMediaPlayer = null
         
-        TTSManager(context).speak(getLocalizedMessage("sound_stopped"))
+        TTSManager(context).speak(getLocalizedMessage(context, "sound_stopped"))
     }
 
     // SYSTÈME DE LOCALISATION MULTILINGUE
-    private fun getSystemLanguage(): String {
+    private fun getSystemLanguage(context: Context): String {
         val installedLanguages = PreferencesManager.getInstalledLanguages(context)
         val systemLang = java.util.Locale.getDefault().language
         
-        // Priorité: langue système si installée, sinon première langue installée
         return if (installedLanguages.contains(systemLang)) {
             systemLang
         } else {
@@ -99,8 +95,8 @@ object SystemIntegration {
         }
     }
 
-    private fun getLocalizedMessage(messageKey: String): String {
-        return when (getSystemLanguage()) {
+    private fun getLocalizedMessage(context: Context, messageKey: String): String {
+        return when (getSystemLanguage(context)) {
             "fr" -> when (messageKey) {
                 "find_phone_activated" -> "Je suis ici ! Dites {keyword} stop pour arrêter le son."
                 "sound_stopped" -> "Son arrêté"
@@ -119,15 +115,15 @@ object SystemIntegration {
                 "sound_error" -> "Erreur de son"
                 else -> "Message non traduit"
             }
-            "zh" -> when (messageKey) { // Chinois
+            "zh" -> when (messageKey) {
                 "find_phone_activated" -> "我在这里！说 {keyword} stop 停止声音。"
                 "sound_stopped" -> "声音已停止"
                 "volume_increased" -> "音量增加"
                 "volume_decreased" -> "音量减少"
                 "silence_activated" -> "静音模式已激活"
-                else -> getLocalizedMessage(messageKey) // Fallback anglais
+                else -> getLocalizedMessage(context, messageKey)
             }
-            else -> when (messageKey) { // Anglais par défaut
+            else -> when (messageKey) {
                 "find_phone_activated" -> "I'm here! Say {keyword} stop to turn off the sound."
                 "sound_stopped" -> "Sound stopped"
                 "volume_increased" -> "Volume increased"
@@ -155,15 +151,15 @@ object SystemIntegration {
         when {
             command.contains("augmenter", ignoreCase = true) || command.contains("increase", ignoreCase = true) -> {
                 audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
-                TTSManager(context).speak(getLocalizedMessage("volume_increased"))
+                TTSManager(context).speak(getLocalizedMessage(context, "volume_increased"))
             }
             command.contains("baisser", ignoreCase = true) || command.contains("decrease", ignoreCase = true) -> {
                 audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
-                TTSManager(context).speak(getLocalizedMessage("volume_decreased"))
+                TTSManager(context).speak(getLocalizedMessage(context, "volume_decreased"))
             }
             command.contains("silence", ignoreCase = true) || command.contains("mute", ignoreCase = true) -> {
                 audioManager.adjustVolume(AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
-                TTSManager(context).speak(getLocalizedMessage("silence_activated"))
+                TTSManager(context).speak(getLocalizedMessage(context, "silence_activated"))
             }
         }
     }
@@ -175,19 +171,19 @@ object SystemIntegration {
             wifiManager.isWifiEnabled = !isEnabled
             
             val messageKey = if (!isEnabled) "wifi_activated" else "wifi_deactivated"
-            TTSManager(context).speak(getLocalizedMessage(messageKey))
+            TTSManager(context).speak(getLocalizedMessage(context, messageKey))
         } catch (e: SecurityException) {
             Log.e(TAG, "Permission WIFI non accordée", e)
-            TTSManager(context).speak(getLocalizedMessage("wifi_permission_missing"))
+            TTSManager(context).speak(getLocalizedMessage(context, "wifi_permission_missing"))
         }
     }
 
     private fun toggleBluetooth(context: Context) {
-        TTSManager(context).speak(getLocalizedMessage("bluetooth_not_implemented"))
+        TTSManager(context).speak(getLocalizedMessage(context, "bluetooth_not_implemented"))
     }
 
     private fun adjustBrightness(context: Context, command: String) {
-        TTSManager(context).speak(getLocalizedMessage("brightness_not_implemented"))
+        TTSManager(context).speak(getLocalizedMessage(context, "brightness_not_implemented"))
     }
 
     private fun openSettings(context: Context) {
@@ -195,7 +191,7 @@ object SystemIntegration {
             val intent = Intent(Settings.ACTION_SETTINGS)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
-            TTSManager(context).speak(getLocalizedMessage("settings_opened"))
+            TTSManager(context).speak(getLocalizedMessage(context, "settings_opened"))
         } catch (e: Exception) {
             Log.e(TAG, "Erreur ouverture paramètres", e)
         }
@@ -207,13 +203,13 @@ object SystemIntegration {
             intent.addCategory(Intent.CATEGORY_HOME)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
-            TTSManager(context).speak(getLocalizedMessage("home_screen"))
+            TTSManager(context).speak(getLocalizedMessage(context, "home_screen"))
         } catch (e: Exception) {
             Log.e(TAG, "Erreur retour accueil", e)
         }
     }
 
     private fun goBack(context: Context) {
-        TTSManager(context).speak(getLocalizedMessage("back_not_implemented"))
+        TTSManager(context).speak(getLocalizedMessage(context, "back_not_implemented"))
     }
 }
