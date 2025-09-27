@@ -26,10 +26,10 @@ object WelcomeManager {
     
     private fun playHappyBeep(context: Context) {
         try {
-            // Utiliser le son BIP court du système (beep simple)
-            val toneType = android.provider.Settings.System.DEFAULT_RINGTONE
-            val mediaPlayer = MediaPlayer.create(context, toneType)
-            mediaPlayer?.setOnCompletionListener { player ->
+            // Utiliser le son de notification système simple
+            val soundUri = android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
+            val mediaPlayer = MediaPlayer.create(context, soundUri)
+            mediaPlayer?.setOnCompletionListener { player: MediaPlayer ->
                 player.release()
             }
             // Jouer seulement 300ms pour un bip court
