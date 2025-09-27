@@ -2,9 +2,9 @@ package com.magiccontrol.utils
 
 import android.content.Context
 import android.media.MediaPlayer
-import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import java.util.Locale
+import com.magiccontrol.tts.TTSManager
 
 object WelcomeManager {
     private const val PREFS_WELCOME = "welcome_prefs"
@@ -38,13 +38,7 @@ object WelcomeManager {
         else 
             "Welcome to MagicControl. Say Magic to begin."
         
-        // TTS correct avec variable capturée
-        val tts = TextToSpeech(context) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                val ttsInstance = TextToSpeech(context, null) // Nouvelle instance
-                ttsInstance.language = Locale.getDefault()
-                ttsInstance.speak(message, TextToSpeech.QUEUE_FLUSH, null, "welcome")
-            }
-        }
+        // Retour à TTSManager simple
+        TTSManager.speak(context, message)
     }
 }

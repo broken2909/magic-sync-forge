@@ -3,9 +3,9 @@ package com.magiccontrol
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
+import android.os.Handler
+import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -22,11 +22,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
-        // 1. LANÇER LE WELCOME IMMÉDIATEMENT (sans attendre les permissions)
-        WelcomeManager.showWelcome(this)
-        
-        // 2. Configurer le bouton paramètres
+        // 1. Configurer le bouton paramètres
         setupSettingsButton()
+        
+        // 2. Attendre 1 seconde que TTS s'initialise, PUIS lancer le welcome
+        Handler(Looper.getMainLooper()).postDelayed({
+            WelcomeManager.showWelcome(this)
+        }, 1000)
         
         // 3. Vérifier les permissions micro (en parallèle)
         checkMicrophonePermission()
@@ -51,25 +53,20 @@ class MainActivity : AppCompatActivity() {
         }
         
         if (missingMicrophone.isNotEmpty()) {
-            // Demander la permission micro APRÈS le welcome
             ActivityCompat.requestPermissions(this, missingMicrophone.toTypedArray(), PERMISSION_REQUEST_CODE)
         } else {
-            // Micro déjà autorisé - lancer les fonctionnalités vocales
             startVoiceFeatures()
         }
     }
     
     private fun startVoiceFeatures() {
-        // Ici on lancera la détection du mot magique, etc.
         android.widget.Toast.makeText(this, "Fonctionnalités vocales activées", android.widget.Toast.LENGTH_SHORT).show()
     }
     
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            val microphoneGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-            
-            if (microphoneGranted) {
+            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 startVoiceFeatures()
             } else {
                 android.widget.Toast.makeText(this, "Fonctionnalités vocales limitées", android.widget.Toast.LENGTH_LONG).show()

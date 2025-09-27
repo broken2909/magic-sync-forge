@@ -4,36 +4,24 @@
     android:height="100dp"
     android:viewportWidth="100"
     android:viewportHeight="100">
-    
+
     <!-- Microphone body -->
     <path
         android:fillColor="@color/github_accent"
         android:pathData="M50,20 A15,15 0 0,1 65,35 L65,55 A15,15 0 0,1 35,55 L35,35 A15,15 0 0,1 50,20 Z"/>
-    
+
     <!-- Microphone stand -->
     <path
         android:fillColor="@color/github_text"
         android:strokeColor="@color/github_text"
         android:strokeWidth="2"
         android:pathData="M50,65 L50,80 M35,80 L65,80"/>
-    
-    <!-- Sound waves - Studio style (plus grandes et prononcées) -->
+
+    <!-- Une seule onde (celle collée au micro) -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="@color/github_accent"
         android:strokeWidth="3"
         android:pathData="M30,45 A20,20 0 0,1 70,45"/>
-    
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="@color/github_accent" 
-        android:strokeWidth="2"
-        android:pathData="M20,45 A30,30 0 0,1 80,45"/>
-        
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="@color/github_accent"
-        android:strokeWidth="1.5"
-        android:pathData="M10,45 A40,40 0 0,1 90,45"/>
-        
+
 </vector>
