@@ -13,10 +13,8 @@ object WelcomeManager {
     fun showWelcome(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_WELCOME, Context.MODE_PRIVATE)
 
-        // 1. Son personnalisé simple
         playCustomSound(context)
         
-        // 2. Welcome vocal seulement au premier lancement
         if (prefs.getBoolean(KEY_FIRST_LAUNCH, true)) {
             showFirstLaunchWelcome(context)
             prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply()
@@ -40,11 +38,12 @@ object WelcomeManager {
         else 
             "Welcome to MagicControl. Say Magic to begin."
         
-        // TTS direct et simple
+        // TTS correct avec variable capturée
         val tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                tts.language = Locale.getDefault()
-                tts.speak(message, TextToSpeech.QUEUE_FLUSH, null, "welcome")
+                val ttsInstance = TextToSpeech(context, null) // Nouvelle instance
+                ttsInstance.language = Locale.getDefault()
+                ttsInstance.speak(message, TextToSpeech.QUEUE_FLUSH, null, "welcome")
             }
         }
     }
