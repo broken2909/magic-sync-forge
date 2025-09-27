@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.widget.Toast
 import java.util.Locale
+import com.magiccontrol.tts.TTSManager
 
 object WelcomeManager {
     private const val PREFS_WELCOME = "welcome_prefs"
@@ -39,7 +40,6 @@ object WelcomeManager {
                 else -> "MagicControl ready"
             }
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            android.util.Log.e("WelcomeManager", "Erreur son personnalisé: ${e.message}")
         }
     }
     
@@ -51,14 +51,7 @@ object WelcomeManager {
             else -> "Welcome to MagicControl. Say Magic to begin."
         }
         
-        // Utiliser le TTS existant mais de manière isolée
-        try {
-            val ttsManager = Class.forName("com.magiccontrol.tts.TTSManager")
-            val speakMethod = ttsManager.getDeclaredMethod("speak", Context::class.java, String::class.java)
-            speakMethod.invoke(null, context, welcomeMessage)
-        } catch (e: Exception) {
-            // Fallback silencieux si TTS échoue
-            android.util.Log.d("WelcomeManager", "TTS non disponible: ${e.message}")
-        }
+        // Utiliser TTSManager DIRECTEMENT
+        TTSManager.speak(context, welcomeMessage)
     }
 }
