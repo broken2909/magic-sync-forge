@@ -30,19 +30,21 @@ class MainActivity : AppCompatActivity() {
         // Permissions micro seulement
         checkMicrophonePermission()
         
-        // Configuration du bouton paramètres - LIAISON AJOUTÉE
+        // Configuration du bouton paramètres
         setupSettingsButton()
-    }
+        
+        // Configuration du bouton paramètres - LIAISON AJOUTÉE
+    
+    
     
     private fun setupSettingsButton() {
-        val settingsButton = findViewById<android.widget.Button>(R.id.settings_button)
-        settingsButton.setOnClickListener {
-            val intent = Intent(this, SettingsActivity::class.java)
-            startActivity(intent)
+        findViewById<android.widget.Button>(R.id.settings_button).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
     }
-    
     private fun checkMicrophonePermission() {
+        
+        // Configuration du bouton paramètres
         val permissions = arrayOf(
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.MODIFY_AUDIO_SETTINGS
