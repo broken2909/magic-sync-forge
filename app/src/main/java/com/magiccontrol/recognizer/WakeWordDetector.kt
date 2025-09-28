@@ -34,7 +34,7 @@ class WakeWordDetector(private val context: Context) {
             val modelPath = ModelManager.getModelPathForLanguage(context, currentLanguage)
             
             if (ModelManager.isModelAvailable(context, currentLanguage)) {
-                voskModel = Model(context.assets.openFd(modelPath).fileDescriptor)
+                voskModel = Model("$modelPath")
                 recognizer = Recognizer(voskModel, sampleRate.toFloat())
                 Log.d(TAG, "Model Vosk chargé: $modelPath")
             } else {
