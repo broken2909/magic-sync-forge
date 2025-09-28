@@ -2,42 +2,71 @@ package com.magiccontrol.tts
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
-import com.magiccontrol.utils.PreferencesManager
+import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import java.util.Locale
 
-class TTSManager(private val context: Context) : TextToSpeech.OnInitListener {
+object TTSManager {
     private var tts: TextToSpeech? = null
-   
-    init {
-        tts = TextToSpeech(context, this)
-    }
-   
-    override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            val lang = when (getCurrentLanguage()) {
-                "fr" -> Locale.FRENCH
-                "en" -> Locale.ENGLISH
-                else -> Locale.FRENCH
+    private var isInitialized = false
+    private val TAG = "TTSManager"
+
+    fun initialize(context: Context) {
+        if (tts == null) {
+            tts = TextToSpeech(context) { status ->
+                if (status == TextToSpeech.SUCCESS) {
+                    setupTTS(context)
+                    isInitialized = true
+                    Log.d(TAG, "TTS initialisé avec succès")
+                } else {
+                    Log.e(TAG, "Erreur initialisation TTS: $status")
+                }
             }
-            tts?.language = lang
         }
     }
-   
-    fun speak(text: String) {
-        tts?.speak(text, TextToSpeech.QUEUE_ADD, null, null)
+
+    private fun setupTTS(context: Context) {
+        tts?.language = Locale.FRENCH
+        tts?.setSpeechRate(1.0f)
+        
+        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) {
+                Log.d(TAG, "TTS started: $utteranceId")
+            }
+
+            override fun onDone(utteranceId: String?) {
+                Log.d(TAG, "TTS completed: $utteranceId")
+            }
+
+            override fun onError(utteranceId: String?) {
+                Log.e(TAG, "TTS error: $utteranceId")
+            }
+        })
     }
-   
+
+    fun speak(context: Context, text: String) {
+        if (!isInitialized) {
+            initialize(context)
+        }
+
+        if (isInitialized && tts != null) {
+            tts?.speak(text, TextToSpeech.QUEUE_ADD, null, "tts_utterance")
+        } else {
+            Log.w(TAG, "TTS non initialisé pour: $text")
+        }
+    }
+
     fun stop() {
         tts?.stop()
     }
-   
+
     fun shutdown() {
         tts?.shutdown()
+        tts = null
+        isInitialized = false
     }
-    
-    private fun getCurrentLanguage(): String {
-        // Utiliser la langue depuis les préférences
-        val installedLanguages = PreferencesManager.getInstalledLanguages(context)
-        return installedLanguages.firstOrNull() ?: "fr"
+
+    fun isSpeaking(): Boolean {
+        return tts?.isSpeaking ?: false
     }
 }
