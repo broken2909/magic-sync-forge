@@ -2,6 +2,7 @@ package com.magiccontrol.ui.settings
 
 import android.os.Bundle
 import android.util.Log
+import com.magiccontrol.ui.settings.SettingsFragment
 import androidx.appcompat.app.AppCompatActivity
 import com.magiccontrol.R
 
