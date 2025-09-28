@@ -4,6 +4,7 @@ import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
+import com.magiccontrol.utils.PreferencesManager
 import java.util.Locale
 
 object TTSManager {
@@ -26,8 +27,14 @@ object TTSManager {
     }
 
     private fun setupTTS(context: Context) {
-        tts?.language = Locale.FRENCH
-        tts?.setSpeechRate(1.0f)
+        val language = when (PreferencesManager.getCurrentLanguage(context)) {
+            "fr" -> Locale.FRENCH
+            "en" -> Locale.ENGLISH
+            else -> Locale.FRENCH
+        }
+
+        tts?.language = language
+        tts?.setSpeechRate(PreferencesManager.getVoiceSpeed(context) / 100f)
         
         tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String?) {
@@ -45,6 +52,10 @@ object TTSManager {
     }
 
     fun speak(context: Context, text: String) {
+        if (!PreferencesManager.isVoiceFeedbackEnabled(context)) {
+            return
+        }
+
         if (!isInitialized) {
             initialize(context)
         }
