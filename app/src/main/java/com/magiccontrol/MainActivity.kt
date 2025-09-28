@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.magiccontrol.service.WakeWordService
+import com.magiccontrol.ui.settings.SettingsActivity
 import com.magiccontrol.utils.WelcomeManager
 
 class MainActivity : AppCompatActivity() {
@@ -30,15 +31,13 @@ class MainActivity : AppCompatActivity() {
         // Permissions micro seulement
         checkMicrophonePermission()
 
-        // Configuration du bouton paramètres - TEMPORAIREMENT DÉSACTIVÉ
+        // Configuration du bouton paramètres - ACTIVÉ
         setupSettingsButton()
     }
 
     private fun setupSettingsButton() {
-        // TEMPORAIREMENT DÉSACTIVÉ - SettingsActivity n'est pas encore prêt
         findViewById<android.widget.Button>(R.id.settings_button)?.setOnClickListener {
-            // TODO: Réactiver quand SettingsActivity sera prêt
-            android.widget.Toast.makeText(this, "Paramètres bientôt disponibles", android.widget.Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
     }
 
