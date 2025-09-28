@@ -1,82 +1,80 @@
 package com.magiccontrol
 
-import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.magiccontrol.service.WakeWordService
-import com.magiccontrol.ui.settings.SettingsActivity
-import com.magiccontrol.utils.WelcomeManager
+import com.magiccontrol.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
-    companion object {
-        private const val PERMISSION_REQUEST_CODE = 123
+    private lateinit var binding: ActivityMainBinding
+    private val audioPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            startWakeWordService()
+            Toast.makeText(this, "Microphone autorisé", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Microphone refusé - Fonctionnalités limitées", Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // Welcome delayed pour TTS
-        Handler(Looper.getMainLooper()).postDelayed({
-            WelcomeManager.showWelcome(this)
-        }, 1000)
-
-        // Permissions micro seulement
+        setupToolbar()
+        setupButtons()
+        showWelcomeToast()
         checkMicrophonePermission()
-
-        // Configuration du bouton paramètres - ACTIVÉ
-        setupSettingsButton()
     }
 
-    private fun setupSettingsButton() {
-        findViewById<android.widget.Button>(R.id.settings_button)?.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+    private fun setupToolbar() {
+        setSupportActionBar(binding.toolbar)
+    }
+
+    private fun setupButtons() {
+        binding.voiceButton.setOnClickListener {
+            // TODO: Implement direct voice command
         }
+
+        binding.settingsButton.setOnClickListener {
+            val intent = Intent(this, com.magiccontrol.ui.settings.SettingsActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    private fun showWelcomeToast() {
+        Toast.makeText(this, R.string.welcome_message, Toast.LENGTH_LONG).show()
     }
 
     private fun checkMicrophonePermission() {
-        val permissions = arrayOf(
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.MODIFY_AUDIO_SETTINGS
-        )
-
-        val missingPermissions = permissions.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-
-        if (missingPermissions.isEmpty()) {
-            // Permissions déjà accordées - démarrer le service
-            startWakeWordService()
-        } else {
-            ActivityCompat.requestPermissions(this, missingPermissions.toTypedArray(), PERMISSION_REQUEST_CODE)
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                startWakeWordService()
+            }
+            else -> {
+                // Demander la permission
+                audioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+            }
         }
     }
 
     private fun startWakeWordService() {
-        try {
-            val serviceIntent = Intent(this, WakeWordService::class.java)
-            startService(serviceIntent)
-        } catch (e: Exception) {
-            android.widget.Toast.makeText(this, "Erreur démarrage service", android.widget.Toast.LENGTH_SHORT).show()
-        }
+        val serviceIntent = Intent(this, com.magiccontrol.service.WakeWordService::class.java)
+        startService(serviceIntent)
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                startWakeWordService()
-            } else {
-                android.widget.Toast.makeText(this, "Permission microphone requise", android.widget.Toast.LENGTH_LONG).show()
-            }
-        }
+    override fun onDestroy() {
+        super.onDestroy()
+        // Cleanup if needed
     }
 }
