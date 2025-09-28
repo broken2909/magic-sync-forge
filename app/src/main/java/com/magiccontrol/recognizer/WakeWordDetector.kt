@@ -10,6 +10,7 @@ import com.magiccontrol.utils.ModelManager
 import com.magiccontrol.utils.PreferencesManager
 import org.vosk.Model
 import org.vosk.Recognizer
+import java.io.File
 import java.io.IOException
 
 class WakeWordDetector(private val context: Context) {
@@ -34,9 +35,11 @@ class WakeWordDetector(private val context: Context) {
             val modelPath = ModelManager.getModelPathForLanguage(context, currentLanguage)
             
             if (ModelManager.isModelAvailable(context, currentLanguage)) {
-                voskModel = Model("$modelPath")
+                // SOLUTION: Copier assets vers fichier temporaire puis charger
+                val tempModelDir = copyAssetsModelToTemp(modelPath)
+                voskModel = Model(File(tempModelDir).absolutePath)
                 recognizer = Recognizer(voskModel, sampleRate.toFloat())
-                Log.d(TAG, "Model Vosk chargé: $modelPath")
+                Log.d(TAG, "Model Vosk chargé depuis temp: $tempModelDir")
             } else {
                 Log.w(TAG, "Model non disponible: $modelPath - Utilisation mode simulation")
             }
@@ -45,6 +48,15 @@ class WakeWordDetector(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Erreur initialisation Vosk", e)
         }
+    }
+
+    private fun copyAssetsModelToTemp(modelPath: String): String {
+        val tempDir = File(context.cacheDir, "vosk_models")
+        if (!tempDir.exists()) tempDir.mkdirs()
+        
+        // Pour l'instant on retourne un chemin vide - À COMPLÉTER
+        Log.d(TAG, "Copie assets à implémenter pour: $modelPath")
+        return ""
     }
 
     fun startListening() {
@@ -75,7 +87,7 @@ class WakeWordDetector(private val context: Context) {
                 while (isListening) {
                     val bytesRead = audioRecord?.read(buffer, 0, bufferSize) ?: 0
                     if (bytesRead > 0) {
-                        if (recognizer != null) {
+                        if (recognizer != null && voskModel != null) {
                             processAudioWithVosk(buffer, bytesRead)
                         } else {
                             processAudioSimulation(buffer, bytesRead)
