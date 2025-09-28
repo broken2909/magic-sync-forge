@@ -1,66 +1,56 @@
 package com.magiccontrol.utils
 
 import android.content.Context
+import android.content.SharedPreferences
 
 object PreferencesManager {
-    private const val PREFS_NAME = "magic_control_prefs"
-   
+
+    private fun getPreferences(context: Context): SharedPreferences {
+        return context.getSharedPreferences("magic_control_prefs", Context.MODE_PRIVATE)
+    }
+
+    // Activation keyword
     fun getActivationKeyword(context: Context): String {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getString("activation_keyword", "magic") ?: "magic"
+        return getPreferences(context).getString("activation_keyword", "magic") ?: "magic"
     }
-   
+
     fun setActivationKeyword(context: Context, keyword: String) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putString("activation_keyword", keyword).apply()
+        getPreferences(context).edit().putString("activation_keyword", keyword).apply()
     }
-   
-    fun getMicrophoneSensitivity(context: Context): Int {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getInt("microphone_sensitivity", 50)
+
+    // Current language
+    fun getCurrentLanguage(context: Context): String {
+        return getPreferences(context).getString("current_language", "fr") ?: "fr"
     }
-   
-    fun setMicrophoneSensitivity(context: Context, sensitivity: Int) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putInt("microphone_sensitivity", sensitivity).apply()
+
+    fun setCurrentLanguage(context: Context, language: String) {
+        getPreferences(context).edit().putString("current_language", language).apply()
     }
-   
-    fun isPasswordLockEnabled(context: Context): Boolean {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getBoolean("password_lock", false)
+
+    // Voice feedback
+    fun isVoiceFeedbackEnabled(context: Context): Boolean {
+        return getPreferences(context).getBoolean("voice_feedback_enabled", true)
     }
-   
-    fun setPasswordLockEnabled(context: Context, enabled: Boolean) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putBoolean("password_lock", enabled).apply()
+
+    fun setVoiceFeedbackEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean("voice_feedback_enabled", enabled).apply()
     }
-   
-    fun getSavedPassword(context: Context): String? {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getString("saved_password", null)
+
+    // Voice speed
+    fun getVoiceSpeed(context: Context): Int {
+        return getPreferences(context).getInt("voice_speed", 100)
     }
-   
-    fun savePassword(context: Context, password: String) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putString("saved_password", password).apply()
+
+    fun setVoiceSpeed(context: Context, speed: Int) {
+        getPreferences(context).edit().putInt("voice_speed", speed).apply()
     }
-   
-    fun getInstalledLanguages(context: Context): Set<String> {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getStringSet("installed_languages", setOf("fr", "en")) ?: setOf("fr", "en")
+
+    // First launch
+    fun isFirstLaunch(context: Context): Boolean {
+        return getPreferences(context).getBoolean("first_launch", true)
     }
-   
-    fun addInstalledLanguage(context: Context, language: String) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val currentLanguages = getInstalledLanguages(context).toMutableSet()
-        currentLanguages.add(language)
-        prefs.edit().putStringSet("installed_languages", currentLanguages).apply()
-    }
-   
-    fun removeInstalledLanguage(context: Context, language: String) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val currentLanguages = getInstalledLanguages(context).toMutableSet()
-        currentLanguages.remove(language)
-        prefs.edit().putStringSet("installed_languages", currentLanguages).apply()
+
+    fun setFirstLaunch(context: Context, isFirst: Boolean) {
+        getPreferences(context).edit().putBoolean("first_launch", isFirst).apply()
     }
 }
