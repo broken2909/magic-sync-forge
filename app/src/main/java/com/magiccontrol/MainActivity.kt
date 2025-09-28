@@ -7,11 +7,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.magiccontrol.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMainBinding
     private val audioPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -25,8 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_main)
 
         setupToolbar()
         setupButtons()
@@ -35,15 +32,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupToolbar() {
-        setSupportActionBar(binding.toolbar)
+        setSupportActionBar(findViewById(R.id.toolbar))
     }
 
     private fun setupButtons() {
-        binding.voiceButton.setOnClickListener {
+        findViewById<android.widget.ImageButton>(R.id.voice_button)?.setOnClickListener {
             // TODO: Implement direct voice command
         }
 
-        binding.settingsButton.setOnClickListener {
+        findViewById<android.widget.Button>(R.id.settings_button)?.setOnClickListener {
             val intent = Intent(this, com.magiccontrol.ui.settings.SettingsActivity::class.java)
             startActivity(intent)
         }
