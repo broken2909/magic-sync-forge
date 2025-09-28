@@ -4,25 +4,48 @@ import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.os.Process
 import android.util.Log
-import com.magiccontrol.utils.KeywordUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.magiccontrol.utils.ModelManager
+import com.magiccontrol.utils.PreferencesManager
+import org.vosk.Model
+import org.vosk.Recognizer
+import java.io.IOException
 
 class WakeWordDetector(private val context: Context) {
 
+    private var voskModel: Model? = null
+    private var recognizer: Recognizer? = null
     private var audioRecord: AudioRecord? = null
     private var isListening = false
     private val sampleRate = 16000
-    private val bufferSize = 4096
+    private val bufferSize = 1024
     private val TAG = "WakeWordDetector"
-    private val detectionScope = CoroutineScope(Dispatchers.IO + Job())
-    private var detectionJob: Job? = null
 
     var onWakeWordDetected: (() -> Unit)? = null
+
+    init {
+        loadVoskModel()
+    }
+
+    private fun loadVoskModel() {
+        try {
+            val currentLanguage = PreferencesManager.getCurrentLanguage(context)
+            val modelPath = ModelManager.getModelPathForLanguage(context, currentLanguage)
+            
+            if (ModelManager.isModelAvailable(context, currentLanguage)) {
+                voskModel = Model(context.assets, modelPath)
+                recognizer = Recognizer(voskModel, sampleRate.toFloat())
+                Log.d(TAG, "Model Vosk chargé: $modelPath")
+            } else {
+                Log.w(TAG, "Model non disponible: $modelPath - Utilisation mode simulation")
+            }
+        } catch (e: IOException) {
+            Log.e(TAG, "Erreur chargement model Vosk", e)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur initialisation Vosk", e)
+        }
+    }
 
     fun startListening() {
         if (isListening) return
@@ -45,56 +68,76 @@ class WakeWordDetector(private val context: Context) {
             audioRecord?.startRecording()
             isListening = true
 
-            detectionJob = detectionScope.launch {
-                processAudio()
-            }
+            Thread {
+                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+                val buffer = ByteArray(bufferSize)
 
-            Log.d(TAG, "Détection du mot d'activation démarrée")
+                while (isListening) {
+                    val bytesRead = audioRecord?.read(buffer, 0, bufferSize) ?: 0
+                    if (bytesRead > 0) {
+                        if (recognizer != null) {
+                            processAudioWithVosk(buffer, bytesRead)
+                        } else {
+                            processAudioSimulation(buffer, bytesRead)
+                        }
+                    }
+                    Thread.sleep(50)
+                }
+            }.start()
+
+            Log.d(TAG, "Détection Vosk démarrée")
 
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur lors du démarrage de la détection", e)
+            Log.e(TAG, "Erreur démarrage écoute Vosk", e)
+            stopListening()
         }
     }
 
-    private suspend fun processAudio() {
-        val buffer = ByteArray(bufferSize)
-
-        while (isListening) {
-            try {
-                val bytesRead = audioRecord?.read(buffer, 0, bufferSize) ?: 0
-                if (bytesRead > 0) {
-                    val audioText = simulateWakeWordDetection(buffer, bytesRead)
-                    if (KeywordUtils.containsActivationKeyword(context, audioText)) {
-                        Log.d(TAG, "Mot d'activation détecté: $audioText")
+    private fun processAudioWithVosk(buffer: ByteArray, bytesRead: Int) {
+        try {
+            if (recognizer?.acceptWaveForm(buffer, bytesRead) == true) {
+                val result = recognizer?.result
+                result?.let {
+                    if (containsActivationKeyword(it)) {
+                        Log.d(TAG, "Mot d'activation détecté par Vosk")
                         onWakeWordDetected?.invoke()
-                        break
                     }
                 }
-                delay(100)
-            } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors du traitement audio", e)
-                break
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur traitement Vosk", e)
         }
     }
 
-    private fun simulateWakeWordDetection(buffer: ByteArray, bytesRead: Int): String {
-        // Simulation simple - dans une vraie implémentation, utiliser Vosk ou Pocketsphinx
-        val energy = buffer.take(bytesRead).map { it.toInt() }.sumOf { kotlin.math.abs(it) }
+    private fun processAudioSimulation(buffer: ByteArray, bytesRead: Int) {
+        val keyword = PreferencesManager.getActivationKeyword(context)
+        val audioText = String(buffer, 0, bytesRead.coerceAtMost(100))
         
-        return if (energy > 50000) { // Seuil arbitraire pour simulation
-            "magic" // Retourne le mot d'activation par défaut
-        } else {
-            ""
+        // SEUIL AUGMENTÉ pour réduire faux positifs
+        val energy = buffer.take(bytesRead).map { it.toInt() }.sumOf { kotlin.math.abs(it) }
+        if (energy > 100000 && audioText.contains(keyword, ignoreCase = true)) {
+            Log.d(TAG, "Mot d'activation détecté (simulation): $keyword")
+            onWakeWordDetected?.invoke()
         }
+    }
+
+    private fun containsActivationKeyword(voskResult: String): Boolean {
+        val keyword = PreferencesManager.getActivationKeyword(context)
+        return voskResult.contains(keyword, ignoreCase = true)
     }
 
     fun stopListening() {
         isListening = false
-        detectionJob?.cancel()
-        audioRecord?.stop()
-        audioRecord?.release()
+        try {
+            audioRecord?.stop()
+            audioRecord?.release()
+            recognizer?.close()
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur arrêt écoute Vosk", e)
+        }
         audioRecord = null
-        Log.d(TAG, "Détection du mot d'activation arrêtée")
+        Log.d(TAG, "Détection Vosk arrêtée")
     }
+
+    fun isListening(): Boolean = isListening
 }

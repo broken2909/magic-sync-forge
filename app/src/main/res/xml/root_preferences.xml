@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Catégorie: Paramètres généraux -->
     <PreferenceCategory
         android:title="Paramètres généraux">
 
-        <!-- Mot clé d'activation - OPTION SIMPLE POUR TEST -->
         <EditTextPreference
             android:key="activation_keyword"
             android:title="Mot clé d'activation"
