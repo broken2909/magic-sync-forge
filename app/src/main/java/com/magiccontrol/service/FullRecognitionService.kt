@@ -46,7 +46,7 @@ class FullRecognitionService : Service() {
             val modelPath = ModelManager.getModelPathForLanguage(applicationContext, currentLanguage)
             
             if (ModelManager.isModelAvailable(applicationContext, currentLanguage)) {
-                voskModel = Model(applicationContext.assets, modelPath)
+                voskModel = Model(applicationContext.assets.openFd(modelPath).fileDescriptor)
                 recognizer = Recognizer(voskModel, sampleRate.toFloat())
                 Log.d(TAG, "Model Vosk chargé: $modelPath")
             } else {
@@ -116,7 +116,7 @@ class FullRecognitionService : Service() {
                             val command = extractCommandFromVoskResult(it)
                             if (command.isNotBlank()) {
                                 processCommand(command)
-                                break
+                                return@launch
                             }
                         }
                     }
