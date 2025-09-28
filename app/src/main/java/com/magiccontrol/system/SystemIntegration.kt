@@ -30,7 +30,7 @@ object SystemIntegration {
             command.contains("retour", ignoreCase = true) ->
                 goBack(context)
             else ->
-                TTSManager.speak(context, "Commande non reconnue")
+                TTSManager(context).speak("Commande non reconnue")
         }
     }
 
@@ -40,15 +40,15 @@ object SystemIntegration {
         when {
             command.contains("augmenter", ignoreCase = true) -> {
                 audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
-                TTSManager.speak(context, "Volume augmenté")
+                TTSManager(context).speak("Volume augmenté")
             }
             command.contains("baisser", ignoreCase = true) -> {
                 audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
-                TTSManager.speak(context, "Volume baissé")
+                TTSManager(context).speak("Volume baissé")
             }
             command.contains("silence", ignoreCase = true) -> {
                 audioManager.adjustVolume(AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
-                TTSManager.speak(context, "Mode silence activé")
+                TTSManager(context).speak("Mode silence activé")
             }
         }
     }
@@ -60,19 +60,19 @@ object SystemIntegration {
             wifiManager.isWifiEnabled = !isEnabled
            
             val status = if (!isEnabled) "activé" else "désactivé"
-            TTSManager.speak(context, "Wifi $status")
+            TTSManager(context).speak("Wifi $status")
         } catch (e: SecurityException) {
             Log.e(TAG, "Permission WIFI non accordée", e)
-            TTSManager.speak(context, "Permission Wifi manquante")
+            TTSManager(context).speak("Permission Wifi manquante")
         }
     }
 
     private fun toggleBluetooth(context: Context) {
-        TTSManager.speak(context, "Commande Bluetooth non encore implémentée")
+        TTSManager(context).speak("Commande Bluetooth non encore implémentée")
     }
 
     private fun adjustBrightness(context: Context, command: String) {
-        TTSManager.speak(context, "Commande luminosité non encore implémentée")
+        TTSManager(context).speak("Commande luminosité non encore implémentée")
     }
 
     private fun openSettings(context: Context) {
@@ -80,7 +80,7 @@ object SystemIntegration {
             val intent = Intent(Settings.ACTION_SETTINGS)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
-            TTSManager.speak(context, "Paramètres ouverts")
+            TTSManager(context).speak("Paramètres ouverts")
         } catch (e: Exception) {
             Log.e(TAG, "Erreur ouverture paramètres", e)
         }
@@ -92,13 +92,13 @@ object SystemIntegration {
             intent.addCategory(Intent.CATEGORY_HOME)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
-            TTSManager.speak(context, "Écran d'accueil")
+            TTSManager(context).speak("Écran d'accueil")
         } catch (e: Exception) {
             Log.e(TAG, "Erreur retour accueil", e)
         }
     }
 
     private fun goBack(context: Context) {
-        TTSManager.speak(context, "Commande retour non encore implémentée")
+        TTSManager(context).speak("Commande retour non encore implémentée")
     }
 }

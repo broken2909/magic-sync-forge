@@ -39,6 +39,6 @@ object WelcomeManager {
             "Welcome to MagicControl. Say Magic to begin."
         
         // Retour à TTSManager simple
-        TTSManager.speak(context, message)
+        TTSManager(context).speak(message)
     }
 }
