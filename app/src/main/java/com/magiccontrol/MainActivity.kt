@@ -13,7 +13,6 @@ import com.magiccontrol.tts.TTSManager
 
 class MainActivity : AppCompatActivity() {
 
-    // ✅ SYSTÈME PERMISSION MICROPHONE
     private val audioPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -28,16 +27,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // ✅ ÉTAPE 1: INITIALISATION TTS
-        TTSManager.initialize(this)
-        
         setupToolbar()
         setupButtons()
-        
-        // ✅ ÉTAPE 2: WELCOME VISUEL IMMÉDIAT
         showWelcomeToast()
-        
-        // ✅ ÉTAPE 3: VÉRIFICATION PERMISSION MICROPHONE
         checkMicrophonePermission()
     }
 
@@ -75,38 +67,42 @@ class MainActivity : AppCompatActivity() {
                 android.Manifest.permission.RECORD_AUDIO
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            // ✅ PERMISSION DÉJÀ ACCORDÉE
             onMicrophoneGranted()
         } else {
-            // ✅ DEMANDER PERMISSION
             audioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
         }
     }
 
     private fun onMicrophoneGranted() {
-        // ✅ ÉTAPE 4: WELCOME VOCAL APRÈS PERMISSION
+        // ✅ INITIALISATION TTS UNIQUEMENT ICI, APRÈS PERMISSION
+        TTSManager.initialize(this)
+        
         if (WelcomeManager.shouldShowWelcome(this)) {
             val welcomeMessage = WelcomeManager.getWelcomeMessage()
             TTSManager.speak(this, welcomeMessage)
         } else {
             TTSManager.speak(this, "MagicControl activé")
         }
-        
-        // ✅ ÉTAPE 5: SERVICES APRÈS WELCOME VOCAL
+
+        // ✅ DÉMARRAGE SERVICE UNIQUEMENT APRÈS INITIALISATION TTS
         android.os.Handler().postDelayed({
             startWakeWordService()
-        }, 2000)
+        }, 3000) // Délai augmenté pour stabilité
     }
 
     private fun onMicrophoneDenied() {
         Toast.makeText(this, "Microphone refusé - Mode limité", Toast.LENGTH_LONG).show()
-        TTSManager.speak(this, "Fonctionnalités vocales désactivées")
-        // ❌ SERVICES NON DÉMARRÉS
+        // Services non démarrés intentionnellement
     }
 
     private fun startWakeWordService() {
-        val intent = Intent(this, WakeWordService::class.java)
-        startService(intent)
+        try {
+            val intent = Intent(this, WakeWordService::class.java)
+            startService(intent)
+            Toast.makeText(this, "Service vocal activé", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Erreur service vocal", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroy() {

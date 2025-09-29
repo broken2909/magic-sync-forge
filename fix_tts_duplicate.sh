@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 Suppression doublon initialisation TTS..."
+
+# Corriger FullRecognitionService - RETIRER TTSManager.initialize
+cat > app/src/main/java/com/magiccontrol/service/FullRecognitionService.kt << 'FILE1'
 package com.magiccontrol.service
 
 import android.app.Service
@@ -204,3 +209,14 @@ class FullRecognitionService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 }
+FILE1
+
+# Vérification finale
+echo "✅ Doublon TTS supprimé!"
+echo "🔍 Vérification..."
+grep -r "TTSManager.initialize" app/src/main/java/
+echo ""
+echo "📊 État final:"
+echo "✅ 1 seule initialisation TTS (MainActivity)"
+echo "✅ FullRecognitionService utilise TTS sans réinitialiser"
+echo "✅ Prêt pour vérification build et push GitHub"

@@ -4,27 +4,8 @@
     android:height="120dp"
     android:viewportWidth="120"
     android:viewportHeight="120">
-    
-    <!-- Background circle -->
+    <!-- Étoile magique simple -->
     <path
-        android:fillColor="@color/github_accent"
-        android:pathData="M60,10 A50,50 0 1,1 60,110 A50,50 0 1,1 60,10 Z"/>
-    
-    <!-- Magic wand -->
-    <path
-        android:fillColor="@color/github_text"
-        android:strokeWidth="2"
-        android:strokeColor="@color/github_text"
-        android:pathData="M40,80 L80,40 M45,75 L85,35 M35,85 L75,45"/>
-    
-    <!-- Stars -->
-    <path
-        android:fillColor="@color/github_warning"
-        android:pathData="M30,30 L32,35 L37,35 L33,38 L35,43 L30,40 L25,43 L27,38 L23,35 L28,35 Z"/>
-    <path
-        android:fillColor="@color/github_warning"
-        android:pathData="M85,75 L87,80 L92,80 L88,83 L90,88 L85,85 L80,88 L82,83 L78,80 L83,80 Z"/>
-    <path
-        android:fillColor="@color/github_warning"
-        android:pathData="M95,25 L96,28 L99,28 L97,30 L98,33 L95,31 L92,33 L93,30 L91,28 L94,28 Z"/>
+        android:fillColor="#58a6ff"
+        android:pathData="M60,10 L70,45 L105,45 L75,65 L85,100 L60,75 L35,100 L45,65 L15,45 L50,45 Z" />
 </vector>
