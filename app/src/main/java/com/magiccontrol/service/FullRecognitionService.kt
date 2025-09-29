@@ -19,6 +19,8 @@ import kotlinx.coroutines.launch
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 
 class FullRecognitionService : Service() {
@@ -43,18 +45,95 @@ class FullRecognitionService : Service() {
     private fun loadVoskModel() {
         try {
             val currentLanguage = PreferencesManager.getCurrentLanguage(applicationContext)
-            val modelPath = ModelManager.getModelPathForLanguage(applicationContext, currentLanguage)
+            val modelCode = "$currentLanguage-small" // Utiliser small intégré
             
-            if (ModelManager.isModelAvailable(applicationContext, currentLanguage)) {
-                // ✅ CORRECTION: Constructeur Vosk correct
-                voskModel = Model(applicationContext.assets, modelPath)
-                recognizer = Recognizer(voskModel, sampleRate.toFloat())
-                Log.d(TAG, "Model Vosk chargé: $modelPath")
+            if (ModelManager.isModelAvailable(applicationContext, currentLanguage, "small")) {
+                // ✅ CORRECTION: Copier modèle assets vers filesystem si nécessaire
+                val modelPath = copyModelFromAssetsIfNeeded(modelCode)
+                if (modelPath != null) {
+                    // ✅ CONSTRUCTEUR CORRECT: Model(chemin_fichier)
+                    voskModel = Model(modelPath)
+                    recognizer = Recognizer(voskModel, sampleRate.toFloat())
+                    Log.d(TAG, "Model Vosk chargé: $modelPath")
+                } else {
+                    Log.w(TAG, "Impossible de copier le modèle depuis assets")
+                    recognizer = null
+                }
             } else {
-                Log.w(TAG, "Model Vosk non disponible - Utilisation mode simulation")
+                Log.w(TAG, "Modèle small non disponible - Utilisation mode simulation")
+                recognizer = null
             }
         } catch (e: IOException) {
             Log.e(TAG, "Erreur chargement model Vosk", e)
+            recognizer = null
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur inattendue chargement model", e)
+            recognizer = null
+        }
+    }
+
+    /**
+     * ✅ COPIE MODÈLE DEPUIS ASSETS VERS FILESYSTEM
+     * Nécessaire car Vosk ne peut pas lire directement depuis assets
+     */
+    private fun copyModelFromAssetsIfNeeded(modelCode: String): String? {
+        return try {
+            val modelsDir = File(filesDir, "models")
+            if (!modelsDir.exists()) {
+                modelsDir.mkdirs()
+            }
+            
+            val targetDir = File(modelsDir, modelCode)
+            val targetPath = targetDir.absolutePath
+            
+            // Si modèle déjà copié, retourner le chemin
+            if (targetDir.exists() && targetDir.list()?.isNotEmpty() == true) {
+                return targetPath
+            }
+            
+            // Copier depuis assets
+            val assetPath = when (modelCode) {
+                "fr-small" -> "models/vosk-model-small-fr"
+                "en-small" -> "models/vosk-model-small-en-us" 
+                else -> "models/vosk-model-small-fr" // fallback
+            }
+            
+            Log.d(TAG, "Copie modèle depuis assets: $assetPath vers $targetPath")
+            copyAssetFolder(assetPath, targetPath)
+            
+            targetPath
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur copie modèle assets", e)
+            null
+        }
+    }
+
+    /**
+     * Copie récursive d'un dossier assets vers filesystem
+     */
+    private fun copyAssetFolder(assetPath: String, targetPath: String): Boolean {
+        return try {
+            val targetDir = File(targetPath)
+            if (!targetDir.exists()) {
+                targetDir.mkdirs()
+            }
+            
+            val files = assets.list(assetPath)
+            if (files != null) {
+                for (file in files) {
+                    val inputStream = assets.open("$assetPath/$file")
+                    val outputFile = File(targetDir, file)
+                    val outputStream = FileOutputStream(outputFile)
+                    
+                    inputStream.copyTo(outputStream)
+                    inputStream.close()
+                    outputStream.close()
+                }
+            }
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur copie asset: $assetPath", e)
+            false
         }
     }
 
