@@ -17,14 +17,17 @@ object AppWelcomeManager {
     
     /**
      * Joue le son toast à chaque ouverture
+     * @param soundResId ID de la ressource son (passé depuis Activity)
      */
-    fun playWelcomeSound(context: Context) {
+    fun playWelcomeSound(context: Context, soundResId: Int) {
         try {
-            val mediaPlayer = MediaPlayer.create(context, R.raw.welcome_sound)
-            mediaPlayer?.setOnCompletionListener { mp ->
-                mp.release()
+            if (soundResId != 0) {
+                val mediaPlayer = MediaPlayer.create(context, soundResId)
+                mediaPlayer?.setOnCompletionListener { mp ->
+                    mp.release()
+                }
+                mediaPlayer?.start()
             }
-            mediaPlayer?.start()
         } catch (e: Exception) {
             // Son non critique - ignore l'erreur
         }
@@ -55,13 +58,5 @@ object AppWelcomeManager {
     private fun markWelcomeShown(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_WELCOME, Context.MODE_PRIVATE)
         prefs.edit().putBoolean(KEY_WELCOME_SHOWN, true).apply()
-    }
-    
-    /**
-     * Reset pour tests (optionnel)
-     */
-    fun resetWelcome(context: Context) {
-        val prefs = context.getSharedPreferences(PREFS_WELCOME, Context.MODE_PRIVATE)
-        prefs.edit().putBoolean(KEY_WELCOME_SHOWN, false).apply()
     }
 }

@@ -29,14 +29,14 @@ class MainActivity : AppCompatActivity() {
         // ✅ INITIALISATION TTS
         TTSManager.initialize(this)
         
-        // ✅ WELCOME INDÉPENDANT
+        // ✅ WELCOME INDÉPENDANT - PASSER L'ID RESSOURCE
         handleIndependentWelcome()
         checkMicrophonePermission()
     }
 
     private fun handleIndependentWelcome() {
-        // ✅ SON TOAST À CHAQUE OUVERTURE
-        AppWelcomeManager.playWelcomeSound(this)
+        // ✅ SON TOAST À CHAQUE OUVERTURE - ID PASSÉ EN PARAMÈTRE
+        AppWelcomeManager.playWelcomeSound(this, R.raw.welcome_sound)
         
         // ✅ MESSAGE VOCAL PREMIÈRE FOIS SEULEMENT
         AppWelcomeManager.playWelcomeVoice(this)
