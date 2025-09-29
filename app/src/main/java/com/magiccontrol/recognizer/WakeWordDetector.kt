@@ -1,15 +1,17 @@
 package com.magiccontrol.recognizer
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Process
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.magiccontrol.utils.PreferencesManager
 
 class WakeWordDetector(private val context: Context) {
-
+    
     private var audioRecord: AudioRecord? = null
     private var isListening = false
     private val sampleRate = 16000
@@ -18,8 +20,22 @@ class WakeWordDetector(private val context: Context) {
 
     var onWakeWordDetected: (() -> Unit)? = null
 
+    // ✅ VÉRIFICATION PERMISSION AVEC FALLBACK
+    private fun hasMicrophonePermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     fun startListening(): Boolean {
         if (isListening) return true
+        
+        // ✅ VÉRIFICATION CRITIQUE PERMISSION
+        if (!hasMicrophonePermission()) {
+            Log.w(TAG, "Permission microphone non accordée - Détection impossible")
+            return false
+        }
 
         try {
             val minBufferSize = AudioRecord.getMinBufferSize(
@@ -52,17 +68,17 @@ class WakeWordDetector(private val context: Context) {
                 }
             }.start()
 
-            Log.d(TAG, "Détection démarrée")
-            return true // Succès
+            Log.d(TAG, "Détection démarrée avec succès")
+            return true
 
         } catch (e: Exception) {
             Log.e(TAG, "Erreur démarrage écoute", e)
             stopListening()
-            return false // Échec
+            return false
         }
     }
 
-    // Nouvelle méthode pour vérifier si le système est fonctionnel
+    // ✅ MÉTHODE SIMPLIFIÉE - VÉRIFIE JUSTE LA CONFIGURATION AUDIO
     fun isSystemFunctional(): Boolean {
         return try {
             val minBufferSize = AudioRecord.getMinBufferSize(
@@ -70,8 +86,7 @@ class WakeWordDetector(private val context: Context) {
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT
             )
-            // Si on peut obtenir la taille buffer, le système audio est probablement OK
-            minBufferSize > 0
+            minBufferSize > 0 && hasMicrophonePermission() // ✅ AJOUT PERMISSION
         } catch (e: Exception) {
             false
         }

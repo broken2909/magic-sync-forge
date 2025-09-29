@@ -3,18 +3,15 @@ package com.magiccontrol.service
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import com.magiccontrol.recognizer.WakeWordDetector
 import com.magiccontrol.tts.TTSManager
-import com.magiccontrol.utils.WelcomeManager
 
 class WakeWordService : Service() {
 
     private lateinit var wakeWordDetector: WakeWordDetector
     private val TAG = "WakeWordService"
-    private val handler = Handler(Looper.getMainLooper())
+    private var isServiceFunctional = false
 
     override fun onCreate() {
         super.onCreate()
@@ -23,54 +20,44 @@ class WakeWordService : Service() {
         try {
             wakeWordDetector = WakeWordDetector(applicationContext)
             
-            // Configuration du callback Z.ai
+            // Configuration du callback
             wakeWordDetector.onWakeWordDetected = {
-                Log.d(TAG, "Mot d'activation détecté - Lancement reconnaissance complète")
-                val message = WelcomeManager.getMagicDetectedMessage()
-                TTSManager.speak(applicationContext, message)
-                startFullRecognition()
+                Log.d(TAG, "Mot d'activation détecté")
+                try {
+                    TTSManager.speak(applicationContext, "Magic")
+                    startFullRecognition()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Erreur traitement mot d'activation", e)
+                }
             }
+            isServiceFunctional = true
+            Log.d(TAG, "Détecteur initialisé avec succès")
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur création détecteur", e)
+            Log.e(TAG, "ERREUR: Impossible de créer le détecteur", e)
+            isServiceFunctional = false
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "Démarrage du service de détection")
         
+        if (!isServiceFunctional) {
+            Log.w(TAG, "Service non fonctionnel - Mode passif")
+            return START_STICKY
+        }
+        
         try {
-            startWakeWordDetection()
+            val success = wakeWordDetector.startListening()
+            if (success) {
+                Log.d(TAG, "Détection démarrée avec succès")
+            } else {
+                Log.w(TAG, "Détection non démarrée - Permission manquante")
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur démarrage service", e)
+            Log.e(TAG, "Erreur démarrage détection", e)
         }
         
         return START_STICKY
-    }
-
-    private fun startWakeWordDetection() {
-        try {
-            // Vérifier si le système est fonctionnel AVANT de démarrer
-            if (wakeWordDetector.isSystemFunctional()) {
-                val success = wakeWordDetector.startListening()
-                
-                if (success) {
-                    // Message détection retardé de 4 secondes pour laisser passer le welcome
-                    handler.postDelayed({
-                        val message = WelcomeManager.getDetectionActiveMessage()
-                        TTSManager.speak(applicationContext, message)
-                    }, 4000)
-                } else {
-                    Log.w(TAG, "Détection démarrée mais avec des limitations")
-                    // Pas de message "Détection activée" si démarrage partiel
-                }
-            } else {
-                Log.e(TAG, "Système vocal non fonctionnel - Micro peut-être bloqué")
-                // Pas de message "Détection activée" si système défaillant
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Erreur lors du démarrage de la détection", e)
-            // Pas de message "Détection activée" en cas d'erreur
-        }
     }
 
     private fun startFullRecognition() {
@@ -87,9 +74,11 @@ class WakeWordService : Service() {
         Log.d(TAG, "Arrêt du service de détection")
         
         try {
-            wakeWordDetector.stopListening()
+            if (::wakeWordDetector.isInitialized) {
+                wakeWordDetector.stopListening()
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur arrêt détection", e)
+            Log.e(TAG, "Erreur lors de l'arrêt du détecteur", e)
         }
     }
 
