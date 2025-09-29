@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.magiccontrol.databinding.ActivityMainBinding
 import com.magiccontrol.utils.WelcomeManager
-import com.magiccontrol.tts.TTSManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,13 +16,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        TTSManager.initialize(this)
-        
+        // SANS TTS
         setupToolbar()
         setupButtons()
-        showWelcomeIfNeeded()
+        showWelcomeToast()
         
-        Toast.makeText(this, "Services désactivés - Stable", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Version minimaliste stable", Toast.LENGTH_LONG).show()
     }
 
     private fun setupToolbar() {
@@ -32,26 +30,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupButtons() {
         binding.voiceButton.setOnClickListener {
-            TTSManager.speak(this, "Commande vocale")
+            Toast.makeText(this, "Commande vocale", Toast.LENGTH_SHORT).show()
         }
 
         binding.settingsButton.setOnClickListener {
-            TTSManager.speak(this, "Paramètres")
+            Toast.makeText(this, "Paramètres", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun showWelcomeIfNeeded() {
+    private fun showWelcomeToast() {
         if (WelcomeManager.shouldShowWelcome(this)) {
             val welcomeMessage = WelcomeManager.getWelcomeMessage()
-            TTSManager.speak(this, welcomeMessage)
             Toast.makeText(this, welcomeMessage, Toast.LENGTH_LONG).show()
             WelcomeManager.markWelcomeShown(this)
         } else {
-            TTSManager.speak(this, "MagicControl prêt")
+            Toast.makeText(this, "MagicControl", Toast.LENGTH_LONG).show()
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 }
