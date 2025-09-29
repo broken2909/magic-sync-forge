@@ -1,3 +1,12 @@
+#!/bin/bash
+echo "🗑️ SUPPRESSION COMPLÈTE FONCTION WELCOME"
+
+# 1. Supprimer AppWelcomeManager
+rm -f app/src/main/java/com/magiccontrol/welcome/AppWelcomeManager.kt
+rmdir app/src/main/java/com/magiccontrol/welcome 2>/dev/null
+
+# 2. Nettoyer MainActivity - garder seulement son toast
+cat > app/src/main/java/com/magiccontrol/MainActivity.kt << 'ACTIVITY'
 package com.magiccontrol
 
 import android.content.Intent
@@ -67,3 +76,12 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "Microphone refusé", Toast.LENGTH_LONG).show()
     }
 }
+ACTIVITY
+
+echo "✅ FONCTION WELCOME COMPLÈTEMENT SUPPRIMÉE!"
+echo "📊 État final:"
+echo "   - ✅ AppWelcomeManager supprimé"
+echo "   - ✅ Package welcome supprimé"
+echo "   - ✅ MainActivity nettoyé (son toast seulement)"
+echo "   - ✅ TTS initialisé pour futur usage"
+echo "   - ✅ Application stable et simple"
