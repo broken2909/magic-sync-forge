@@ -21,22 +21,47 @@ class MainActivity : AppCompatActivity() {
         
         TTSManager.initialize(this)
         
-        Toast.makeText(this, "Avec services", Toast.LENGTH_LONG).show()
+        setupToolbar()
+        setupButtons()
+        showWelcomeIfNeeded()
         
-        // Welcome avec TTS
+        // Services sans permission complexe (pour test)
+        android.os.Handler().postDelayed({
+            startWakeWordService()
+        }, 3000)
+    }
+
+    private fun setupToolbar() {
+        setSupportActionBar(binding.toolbar)
+    }
+
+    private fun setupButtons() {
+        binding.voiceButton.setOnClickListener {
+            // TODO: Implement direct voice command
+        }
+
+        binding.settingsButton.setOnClickListener {
+            TTSManager.speak(this, "Paramètres temporairement indisponibles")
+        }
+    }
+
+    private fun showWelcomeIfNeeded() {
         if (WelcomeManager.shouldShowWelcome(this)) {
             val welcomeMessage = WelcomeManager.getWelcomeMessage()
             TTSManager.speak(this, welcomeMessage)
             Toast.makeText(this, welcomeMessage, Toast.LENGTH_LONG).show()
             WelcomeManager.markWelcomeShown(this)
+        } else {
+            TTSManager.speak(this, "MagicControl activé")
         }
-        
-        // TEST: Services seulement
-        startWakeWordService()
     }
 
     private fun startWakeWordService() {
         val intent = Intent(this, WakeWordService::class.java)
         startService(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 }
