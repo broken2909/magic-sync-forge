@@ -3,14 +3,18 @@ package com.magiccontrol.service
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.magiccontrol.recognizer.WakeWordDetector
 import com.magiccontrol.tts.TTSManager
+import com.magiccontrol.utils.WelcomeManager
 
 class WakeWordService : Service() {
 
     private lateinit var wakeWordDetector: WakeWordDetector
     private val TAG = "WakeWordService"
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate() {
         super.onCreate()
@@ -22,12 +26,12 @@ class WakeWordService : Service() {
             // Configuration du callback Z.ai
             wakeWordDetector.onWakeWordDetected = {
                 Log.d(TAG, "Mot d'activation détecté - Lancement reconnaissance complète")
-                TTSManager.speak(applicationContext, "Mot magic détecté")
+                val message = WelcomeManager.getMagicDetectedMessage()
+                TTSManager.speak(applicationContext, message)
                 startFullRecognition()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Erreur création détecteur", e)
-            TTSManager.speak(applicationContext, "Erreur service vocal")
         }
     }
 
@@ -38,7 +42,6 @@ class WakeWordService : Service() {
             startWakeWordDetection()
         } catch (e: Exception) {
             Log.e(TAG, "Erreur démarrage service", e)
-            TTSManager.speak(applicationContext, "Erreur démarrage")
         }
         
         return START_STICKY
@@ -46,11 +49,27 @@ class WakeWordService : Service() {
 
     private fun startWakeWordDetection() {
         try {
-            wakeWordDetector.startListening()
-            TTSManager.speak(applicationContext, "Détection activée")
+            // Vérifier si le système est fonctionnel AVANT de démarrer
+            if (wakeWordDetector.isSystemFunctional()) {
+                val success = wakeWordDetector.startListening()
+                
+                if (success) {
+                    // Message détection retardé de 4 secondes pour laisser passer le welcome
+                    handler.postDelayed({
+                        val message = WelcomeManager.getDetectionActiveMessage()
+                        TTSManager.speak(applicationContext, message)
+                    }, 4000)
+                } else {
+                    Log.w(TAG, "Détection démarrée mais avec des limitations")
+                    // Pas de message "Détection activée" si démarrage partiel
+                }
+            } else {
+                Log.e(TAG, "Système vocal non fonctionnel - Micro peut-être bloqué")
+                // Pas de message "Détection activée" si système défaillant
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Erreur lors du démarrage de la détection", e)
-            TTSManager.speak(applicationContext, "Microphone non disponible")
+            // Pas de message "Détection activée" en cas d'erreur
         }
     }
 

@@ -18,8 +18,8 @@ class WakeWordDetector(private val context: Context) {
 
     var onWakeWordDetected: (() -> Unit)? = null
 
-    fun startListening() {
-        if (isListening) return
+    fun startListening(): Boolean {
+        if (isListening) return true
 
         try {
             val minBufferSize = AudioRecord.getMinBufferSize(
@@ -53,10 +53,27 @@ class WakeWordDetector(private val context: Context) {
             }.start()
 
             Log.d(TAG, "Détection démarrée")
+            return true // Succès
 
         } catch (e: Exception) {
             Log.e(TAG, "Erreur démarrage écoute", e)
             stopListening()
+            return false // Échec
+        }
+    }
+
+    // Nouvelle méthode pour vérifier si le système est fonctionnel
+    fun isSystemFunctional(): Boolean {
+        return try {
+            val minBufferSize = AudioRecord.getMinBufferSize(
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+            )
+            // Si on peut obtenir la taille buffer, le système audio est probablement OK
+            minBufferSize > 0
+        } catch (e: Exception) {
+            false
         }
     }
 

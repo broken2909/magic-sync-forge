@@ -18,7 +18,7 @@ object WelcomeManager {
         prefs.edit().putBoolean(KEY_WELCOME_SHOWN, true).apply()
     }
 
-    fun getWelcomeMessage(context: Context): String {
+    fun getWelcomeMessage(): String {
         val currentLocale = Locale.getDefault().language
         return when (currentLocale) {
             "fr" -> "Bienvenue dans votre assistant vocal MagicControl"
@@ -27,6 +27,30 @@ object WelcomeManager {
             "es" -> "Bienvenido a su asistente de voz MagicControl"
             "ar" -> "مرحبًا بك في مساعدك الصوتي MagicControl"
             else -> "Welcome to your MagicControl voice assistant"
+        }
+    }
+
+    fun getDetectionActiveMessage(): String {
+        val currentLocale = Locale.getDefault().language
+        return when (currentLocale) {
+            "fr" -> "Détection activée"
+            "en" -> "Detection activated"
+            "zh" -> "检测已激活"
+            "es" -> "Detección activada"
+            "ar" -> "تم تفعيل الكشف"
+            else -> "Detection activated"
+        }
+    }
+
+    fun getMagicDetectedMessage(): String {
+        val currentLocale = Locale.getDefault().language
+        return when (currentLocale) {
+            "fr" -> "Mot magic détecté"
+            "en" -> "Magic word detected"
+            "zh" -> "检测到魔法词"
+            "es" -> "Palabra mágica detectada"
+            "ar" -> "تم اكتشاف الكلمة السحرية"
+            else -> "Magic word detected"
         }
     }
 }
