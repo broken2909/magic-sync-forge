@@ -46,7 +46,8 @@ class FullRecognitionService : Service() {
             val modelPath = ModelManager.getModelPathForLanguage(applicationContext, currentLanguage)
             
             if (ModelManager.isModelAvailable(applicationContext, currentLanguage)) {
-                voskModel = Model("$modelPath")
+                // ✅ CORRECTION: Constructeur Vosk correct
+                voskModel = Model(applicationContext.assets, modelPath)
                 recognizer = Recognizer(voskModel, sampleRate.toFloat())
                 Log.d(TAG, "Model Vosk chargé: $modelPath")
             } else {
