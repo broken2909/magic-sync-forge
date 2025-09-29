@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🎯 PHASE 1 - STABILITÉ MAXIMUM"
+
+# Corriger MainActivity pour Phase 1 uniquement
+cat > app/src/main/java/com/magiccontrol/MainActivity.kt << 'FILE1'
 package com.magiccontrol
 
 import android.content.Intent
@@ -81,3 +86,14 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "❌ Microphone refusé - Mode limité", Toast.LENGTH_LONG).show()
     }
 }
+FILE1
+
+echo "✅ PHASE 1 APPLIQUÉE!"
+echo "📊 Fonctionnalités activées:"
+echo "   - ✅ Toast + Welcome messages"
+echo "   - ✅ Demande permission microphone" 
+echo "   - ✅ Interface basique stable"
+echo "   - ❌ Aucun service complexe"
+echo "   - ❌ Aucun TTS (risque crash)"
+echo ""
+echo "🚀 Testez l'application - Elle ne devrait PLUS crash!"
