@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🎵 AJOUT SON TOAST WELCOME PARTAGÉ"
+
+# Ajouter seulement la lecture du son pour le toast welcome
+cat > app/src/main/java/com/magiccontrol/MainActivity.kt << 'FILE1'
 package com.magiccontrol
 
 import android.content.Intent
@@ -78,3 +83,12 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "❌ Microphone refusé - Mode limité", Toast.LENGTH_LONG).show()
     }
 }
+FILE1
+
+echo "✅ SON TOAST WELCOME AJOUTÉ!"
+echo "📊 Configuration:"
+echo "   - ✅ Fichier: welcome_sound.mp3 (partagé)"
+echo "   - ✅ Lecture: Au toast welcome + détection langue"
+echo "   - ✅ Gestion erreur: Son non bloquant"
+echo ""
+echo "🚀 Push pour tester le toast avec son!"
