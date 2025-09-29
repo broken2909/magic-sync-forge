@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 CORRECTION MainActivity SANS databinding"
+
+# Version simplifiée sans databinding
+cat > app/src/main/java/com/magiccontrol/MainActivity.kt << 'FILE1'
 package com.magiccontrol
 
 import android.content.Intent
@@ -60,3 +65,12 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "❌ Microphone refusé - Mode limité", Toast.LENGTH_LONG).show()
     }
 }
+FILE1
+
+echo "✅ CORRECTION APPLIQUÉE!"
+echo "📊 MainActivity maintenant:"
+echo "   - ✅ Sans databinding (findViewById implicite)"
+echo "   - ✅ Toast + Welcome + Permission micro"
+echo "   - ✅ 100% compatible avec le layout existant"
+echo ""
+echo "🚀 Nouveau push GitHub!"
