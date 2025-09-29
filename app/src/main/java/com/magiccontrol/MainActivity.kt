@@ -1,6 +1,7 @@
 package com.magiccontrol
 
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -11,7 +12,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
-        Toast.makeText(this, "MagicControl démarré", Toast.LENGTH_SHORT).show()
+        // Son welcome personnalisé
+        playWelcomeSound()
+        
+        // Welcome toast
+        Toast.makeText(this, "Dites 'Magic' pour commencer", Toast.LENGTH_LONG).show()
         
         // Bouton settings
         findViewById<android.widget.Button>(R.id.settings_button)?.setOnClickListener {
@@ -23,9 +28,17 @@ class MainActivity : AppCompatActivity() {
         startWakeWordService()
     }
 
+    private fun playWelcomeSound() {
+        try {
+            val mediaPlayer = MediaPlayer.create(this, R.raw.welcome_sound)
+            mediaPlayer?.start()
+        } catch (e: Exception) {
+            // Fallback silencieux si erreur
+        }
+    }
+
     private fun startWakeWordService() {
         val serviceIntent = Intent(this, com.magiccontrol.service.WakeWordService::class.java)
         startService(serviceIntent)
-        Toast.makeText(this, "Service vocal démarré", Toast.LENGTH_SHORT).show()
     }
 }
