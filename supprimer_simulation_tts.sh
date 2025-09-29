@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🗑️ SUPPRESSION SIMULATION TTS - RESPECT Z.ai"
+
+# Rétablir TTSManager avec détection AUTO SANS liste de langues
+cat > app/src/main/java/com/magiccontrol/tts/TTSManager.kt << 'TTS'
 package com.magiccontrol.tts
 
 import android.content.Context
@@ -80,3 +85,13 @@ object TTSManager {
         return tts?.isSpeaking ?: false
     }
 }
+TTS
+
+echo "✅ SIMULATION SUPPRIMÉE!"
+echo "📊 TTSManager maintenant:"
+echo "   - ✅ Utilise Locale.getDefault() DIRECTEMENT"
+echo "   - ✅ ZERO liste de langues hardcodée"
+echo "   - ✅ 100% détection automatique système"
+echo "   - ✅ RESPECT architecture Z.ai"
+echo ""
+echo "🚀 TTS Android gère TOUTES les langues automatiquement!"
