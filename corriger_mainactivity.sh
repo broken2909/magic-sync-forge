@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 CORRECTION MAINACTIVITY SANS WELCOMEMANAGER"
+
+# Recréer MainActivity sans référence à WelcomeManager
+cat > app/src/main/java/com/magiccontrol/MainActivity.kt << 'FILE1'
 package com.magiccontrol
 
 import android.content.Intent
@@ -9,7 +14,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.magiccontrol.tts.TTSManager
-import com.magiccontrol.utils.WelcomeManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,22 +34,18 @@ class MainActivity : AppCompatActivity() {
         // ✅ INITIALISATION TTS
         TTSManager.initialize(this)
         
-        // ✅ WELCOME INTELLIGENT
-        handleWelcomeLogic()
+        // ✅ WELCOME SIMPLE AVEC TTS
+        showWelcomeWithTTS()
         checkMicrophonePermission()
     }
 
-    private fun handleWelcomeLogic() {
-        // ✅ SON TOAST TOUJOURS
-        playToastSound()
+    private fun showWelcomeWithTTS() {
+        // ✅ APPROCHE ORIGINALE : Message fixe + TTS auto-détection langue
+        val welcomeMessage = getString(R.string.welcome_message)
         
-        // ✅ WELCOME VOCAL UNE SEULE FOIS
-        if (WelcomeManager.shouldShowWelcome(this)) {
-            val welcomeMessage = WelcomeManager.getWelcomeMessage()
-            TTSManager.speak(this, welcomeMessage)
-            WelcomeManager.markWelcomeShown(this)
-            WelcomeManager.markFirstLaunchComplete(this)
-        }
+        // ✅ SON TOAST + SYNTHÈSE VOCALE
+        playToastSound()
+        TTSManager.speak(this, welcomeMessage)
     }
 
     private fun playToastSound() {
@@ -73,14 +73,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onMicrophoneGranted() {
-        // ✅ "MagicControl activé" sera dit après détection "Magic"
-        // Pour l'instant, rien ou message simple
-        if (WelcomeManager.isFirstLaunch(this)) {
-            TTSManager.speak(this, "Microphone autorisé")
-        }
+        TTSManager.speak(this, "Microphone autorisé, MagicControl prêt")
     }
 
     private fun onMicrophoneDenied() {
-        Toast.makeText(this, "Microphone refusé", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "❌ Microphone refusé - Mode limité", Toast.LENGTH_LONG).show()
     }
 }
+FILE1
+
+echo "✅ MAINACTIVITY CORRIGÉ!"
+echo "📊 Approche originale restaurée:"
+echo "   - ✅ Utilise R.string.welcome_message"
+echo "   - ✅ TTS gère automatiquement la langue"
+echo "   - ✅ Plus de WelcomeManager personnalisé"
+echo "   - ✅ Son welcome_sound conservé"
+echo ""
+echo "🚀 Maintenant TTS détectera automatiquement la langue système!"
