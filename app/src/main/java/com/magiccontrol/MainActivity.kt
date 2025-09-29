@@ -1,50 +1,64 @@
 package com.magiccontrol
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.magiccontrol.databinding.ActivityMainBinding
+import com.magiccontrol.service.WakeWordService
 import com.magiccontrol.utils.WelcomeManager
+import com.magiccontrol.tts.TTSManager
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMainBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        
-        // SANS TTS
+        setContentView(R.layout.activity_main) // ✅ Z.ai method
+
         setupToolbar()
         setupButtons()
-        showWelcomeToast()
+        showWelcomeIfNeeded()
         
-        Toast.makeText(this, "Version minimaliste stable", Toast.LENGTH_LONG).show()
+        // ✅ Services après welcome (timing correct)
+        android.os.Handler().postDelayed({
+            startWakeWordService()
+        }, 2000)
     }
 
     private fun setupToolbar() {
-        setSupportActionBar(binding.toolbar)
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
     }
 
     private fun setupButtons() {
-        binding.voiceButton.setOnClickListener {
-            Toast.makeText(this, "Commande vocale", Toast.LENGTH_SHORT).show()
+        val voiceButton = findViewById<android.widget.ImageButton>(R.id.voice_button)
+        val settingsButton = findViewById<android.widget.Button>(R.id.settings_button)
+
+        voiceButton.setOnClickListener {
+            // TODO: Implement direct voice command
         }
 
-        binding.settingsButton.setOnClickListener {
-            Toast.makeText(this, "Paramètres", Toast.LENGTH_SHORT).show()
+        settingsButton.setOnClickListener {
+            TTSManager.speak(this, "Paramètres temporairement indisponibles")
         }
     }
 
-    private fun showWelcomeToast() {
+    private fun showWelcomeIfNeeded() {
         if (WelcomeManager.shouldShowWelcome(this)) {
             val welcomeMessage = WelcomeManager.getWelcomeMessage()
+            TTSManager.speak(this, welcomeMessage)
             Toast.makeText(this, welcomeMessage, Toast.LENGTH_LONG).show()
             WelcomeManager.markWelcomeShown(this)
         } else {
-            Toast.makeText(this, "MagicControl", Toast.LENGTH_LONG).show()
+            TTSManager.speak(this, "MagicControl activé")
         }
+    }
+
+    private fun startWakeWordService() {
+        val intent = Intent(this, WakeWordService::class.java)
+        startService(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 }
