@@ -2,14 +2,13 @@ package com.magiccontrol
 
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.magiccontrol.tts.TTSManager
-import com.magiccontrol.utils.WelcomeManager
+import com.magiccontrol.welcome.AppWelcomeManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,34 +29,17 @@ class MainActivity : AppCompatActivity() {
         // ✅ INITIALISATION TTS
         TTSManager.initialize(this)
         
-        // ✅ WELCOME INTELLIGENT
-        handleWelcomeLogic()
+        // ✅ WELCOME INDÉPENDANT
+        handleIndependentWelcome()
         checkMicrophonePermission()
     }
 
-    private fun handleWelcomeLogic() {
-        // ✅ SON TOAST TOUJOURS
-        playToastSound()
+    private fun handleIndependentWelcome() {
+        // ✅ SON TOAST À CHAQUE OUVERTURE
+        AppWelcomeManager.playWelcomeSound(this)
         
-        // ✅ WELCOME VOCAL UNE SEULE FOIS
-        if (WelcomeManager.shouldShowWelcome(this)) {
-            val welcomeMessage = WelcomeManager.getWelcomeMessage()
-            TTSManager.speak(this, welcomeMessage)
-            WelcomeManager.markWelcomeShown(this)
-            WelcomeManager.markFirstLaunchComplete(this)
-        }
-    }
-
-    private fun playToastSound() {
-        try {
-            val mediaPlayer = MediaPlayer.create(this, R.raw.welcome_sound)
-            mediaPlayer?.setOnCompletionListener { mp ->
-                mp.release()
-            }
-            mediaPlayer?.start()
-        } catch (e: Exception) {
-            // Son non critique
-        }
+        // ✅ MESSAGE VOCAL PREMIÈRE FOIS SEULEMENT
+        AppWelcomeManager.playWelcomeVoice(this)
     }
 
     private fun checkMicrophonePermission() {
@@ -73,11 +55,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onMicrophoneGranted() {
-        // ✅ "MagicControl activé" sera dit après détection "Magic"
-        // Pour l'instant, rien ou message simple
-        if (WelcomeManager.isFirstLaunch(this)) {
-            TTSManager.speak(this, "Microphone autorisé")
-        }
+        Toast.makeText(this, "Microphone autorisé", Toast.LENGTH_LONG).show()
     }
 
     private fun onMicrophoneDenied() {
