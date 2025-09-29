@@ -3,6 +3,7 @@ package com.magiccontrol.welcome
 import android.content.Context
 import android.content.SharedPreferences
 import android.media.MediaPlayer
+import android.widget.Toast
 import com.magiccontrol.tts.TTSManager
 
 /**
@@ -38,7 +39,12 @@ object AppWelcomeManager {
      */
     fun shouldPlayWelcomeVoice(context: Context): Boolean {
         val prefs = context.getSharedPreferences(PREFS_WELCOME, Context.MODE_PRIVATE)
-        return !prefs.getBoolean(KEY_WELCOME_SHOWN, false)
+        val shouldShow = !prefs.getBoolean(KEY_WELCOME_SHOWN, false)
+        
+        // ✅ DEBUG: Afficher l'état dans un toast
+        Toast.makeText(context, "Debug: shouldShowWelcome = $shouldShow", Toast.LENGTH_LONG).show()
+        
+        return shouldShow
     }
     
     /**
@@ -58,5 +64,14 @@ object AppWelcomeManager {
     private fun markWelcomeShown(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_WELCOME, Context.MODE_PRIVATE)
         prefs.edit().putBoolean(KEY_WELCOME_SHOWN, true).apply()
+    }
+    
+    /**
+     * Reset pour tests (optionnel)
+     */
+    fun resetWelcome(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_WELCOME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_WELCOME_SHOWN, false).apply()
+        Toast.makeText(context, "Welcome reseté", Toast.LENGTH_SHORT).show()
     }
 }

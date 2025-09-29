@@ -26,19 +26,22 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // ✅ INITIALISATION TTS
+        // ✅ SON TOAST IMMÉDIAT
+        AppWelcomeManager.playWelcomeSound(this, R.raw.welcome_sound)
+        
+        // ✅ INITIALISATION TTS AVEC CALLBACK
         TTSManager.initialize(this)
         
-        // ✅ WELCOME INDÉPENDANT - PASSER L'ID RESSOURCE
-        handleIndependentWelcome()
+        // ✅ DÉLAI POUR LAISSER TTS S'INITIALISER PUIS WELCOME VOCAL
+        android.os.Handler().postDelayed({
+            handleWelcomeVoice()
+        }, 2000) // 2 secondes pour TTS
+        
         checkMicrophonePermission()
     }
 
-    private fun handleIndependentWelcome() {
-        // ✅ SON TOAST À CHAQUE OUVERTURE - ID PASSÉ EN PARAMÈTRE
-        AppWelcomeManager.playWelcomeSound(this, R.raw.welcome_sound)
-        
-        // ✅ MESSAGE VOCAL PREMIÈRE FOIS SEULEMENT
+    private fun handleWelcomeVoice() {
+        // ✅ WELCOME VOCAL UNIQUEMENT APRÈS INITIALISATION TTS
         AppWelcomeManager.playWelcomeVoice(this)
     }
 
