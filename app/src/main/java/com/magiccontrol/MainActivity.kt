@@ -1,11 +1,9 @@
 package com.magiccontrol
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.magiccontrol.databinding.ActivityMainBinding
-import com.magiccontrol.service.WakeWordService
 import com.magiccontrol.utils.WelcomeManager
 import com.magiccontrol.tts.TTSManager
 
@@ -25,10 +23,7 @@ class MainActivity : AppCompatActivity() {
         setupButtons()
         showWelcomeIfNeeded()
         
-        // Services sans permission complexe (pour test)
-        android.os.Handler().postDelayed({
-            startWakeWordService()
-        }, 3000)
+        Toast.makeText(this, "Services désactivés - Stable", Toast.LENGTH_LONG).show()
     }
 
     private fun setupToolbar() {
@@ -37,11 +32,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupButtons() {
         binding.voiceButton.setOnClickListener {
-            // TODO: Implement direct voice command
+            TTSManager.speak(this, "Commande vocale")
         }
 
         binding.settingsButton.setOnClickListener {
-            TTSManager.speak(this, "Paramètres temporairement indisponibles")
+            TTSManager.speak(this, "Paramètres")
         }
     }
 
@@ -52,13 +47,8 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, welcomeMessage, Toast.LENGTH_LONG).show()
             WelcomeManager.markWelcomeShown(this)
         } else {
-            TTSManager.speak(this, "MagicControl activé")
+            TTSManager.speak(this, "MagicControl prêt")
         }
-    }
-
-    private fun startWakeWordService() {
-        val intent = Intent(this, WakeWordService::class.java)
-        startService(intent)
     }
 
     override fun onDestroy() {
