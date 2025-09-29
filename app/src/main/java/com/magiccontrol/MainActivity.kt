@@ -5,6 +5,8 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.magiccontrol.tts.TTSManager
+import com.magiccontrol.utils.WelcomeManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -15,8 +17,16 @@ class MainActivity : AppCompatActivity() {
         // Son welcome personnalisé
         playWelcomeSound()
         
-        // Welcome toast
-        Toast.makeText(this, "Dites 'Magic' pour commencer", Toast.LENGTH_LONG).show()
+        // Système welcome multilingue une seule fois
+        if (WelcomeManager.shouldShowWelcome(this)) {
+            val welcomeMessage = WelcomeManager.getWelcomeMessage(this)
+            TTSManager.speak(this, welcomeMessage)
+            Toast.makeText(this, welcomeMessage, Toast.LENGTH_LONG).show()
+            WelcomeManager.markWelcomeShown(this)
+        } else {
+            // Message normal pour les ouvertures suivantes
+            Toast.makeText(this, "Dites 'Magic' pour commencer", Toast.LENGTH_LONG).show()
+        }
         
         // Bouton settings
         findViewById<android.widget.Button>(R.id.settings_button)?.setOnClickListener {
