@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 CORRECTION TTS PROFESSIONNEL - DÉTECTION RÉELLE"
+
+# Recréer TTSManager avec gestion propre des langues
+cat > app/src/main/java/com/magiccontrol/tts/TTSManager.kt << 'TTS'
 package com.magiccontrol.tts
 
 import android.content.Context
@@ -116,3 +121,15 @@ object TTSManager {
         return tts?.isSpeaking ?: false
     }
 }
+TTS
+
+echo "✅ TTS PROFESSIONNEL CONFIGURÉ!"
+echo "📊 Logique de détection:"
+echo "   - ✅ Vérifie les langues disponibles TTS"
+echo "   - ✅ Essaie la langue système exacte"
+echo "   - ✅ Essaie la langue de base (sans pays)"
+echo "   - ✅ Fallback anglais"
+echo "   - ✅ Fallback première langue disponible"
+echo "   - ✅ Logs détaillés pour debug"
+echo ""
+echo "🚀 Cette version utilise VRAIMENT la détection système!"
