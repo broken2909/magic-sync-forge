@@ -1,0 +1,68 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    
+    <!-- Cercle de fond -->
+    <circle
+        android:cx="50"
+        android:cy="50"
+        android:r="40"
+        android:fill="#58a6ff" /> <!-- Couleur accent Z.ai -->
+    
+    <!-- Base du micro -->
+    <rect
+        android:x="45"
+        android:y="25"
+        android:width="10"
+        android:height="30"
+        android:fill="#c9d1d9" /> <!-- Couleur texte Z.ai -->
+    
+    <!-- Grille du micro -->
+    <rect
+        android:x="42"
+        android:y="20"
+        android:width="16"
+        android:height="5"
+        android:rx="2"
+        android:fill="#0d1117" /> <!-- Background Z.ai -->
+    
+    <!-- Onde sonore 1 (interne) -->
+    <circle
+        android:cx="50"
+        android:cy="50"
+        android:r="30"
+        android:stroke="#58a6ff"
+        android:strokeWidth="2"
+        android:fill="?attr/colorOnPrimary" />
+    
+    <!-- Onde sonore 2 (externe) -->
+    <circle
+        android:cx="50"
+        android:cy="50"
+        android:r="45"
+        android:stroke="#58a6ff"
+        android:strokeWidth="1.5"
+        android:fill="?attr/colorOnPrimary" />
+        
+    <!-- Animation des ondes (pour interaction future) -->
+    <group android:name="sound_waves">
+        <circle
+            android:name="wave1"
+            android:cx="50"
+            android:cy="50"
+            android:r="30"
+            android:stroke="#58a6ff"
+            android:strokeWidth="2"
+            android:fill="?attr/colorOnPrimary" />
+        <circle
+            android:name="wave2"
+            android:cx="50"
+            android:cy="50"
+            android:r="45"
+            android:stroke="#58a6ff"
+            android:strokeWidth="1.5"
+            android:fill="?attr/colorOnPrimary" />
+    </group>
+</vector>

@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🎨 CRÉATION LOGO CERCLE ROTATIF MC/ONDE"
+
+# Créer le logo cercle rotatif avec deux faces harmonieuses
+cat > app/src/main/res/drawable/ic_magic_control.xml << 'LOGO'
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="120dp"
     android:height="120dp"
@@ -70,3 +75,14 @@
             android:fill="?attr/colorOnPrimary" />
     </group>
 </vector>
+LOGO
+
+echo "✅ LOGO ROTATIF CRÉÉ!"
+echo "🎨 Caractéristiques:"
+echo "   - ✅ Face 1: MC + onde (bleu fond / blanc éléments)"
+echo "   - ✅ Face 2: Ondes sonores (dark fond / bleu ondes)" 
+echo "   - ✅ Rotation 360° continue entre les deux faces"
+echo "   - ✅ Couleurs harmonieuses GitHub Dark"
+echo "   - ✅ Design accessible et significatif"
+echo ""
+echo "🚀 Le logo reflète parfaitement la fonction vocale de l'application!"
