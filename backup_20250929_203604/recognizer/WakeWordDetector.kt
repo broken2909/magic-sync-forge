@@ -30,6 +30,7 @@ class WakeWordDetector(private val context: Context) {
     fun startListening(): Boolean {
         if (isListening) return true
         
+        // ✅ VÉRIFICATION CRITIQUE PERMISSION AVANT TOUTE INITIALISATION AUDIO
         if (!hasMicrophonePermission()) {
             Log.w(TAG, "Permission microphone non accordée - Détection impossible")
             return false
@@ -42,6 +43,7 @@ class WakeWordDetector(private val context: Context) {
                 AudioFormat.ENCODING_PCM_16BIT
             )
             
+            // ✅ VÉRIFICATION SUPPLÉMENTAIRE DE LA CONFIGURATION AUDIO
             if (minBufferSize == AudioRecord.ERROR || minBufferSize == AudioRecord.ERROR_BAD_VALUE) {
                 Log.e(TAG, "Configuration audio invalide")
                 return false
@@ -55,6 +57,7 @@ class WakeWordDetector(private val context: Context) {
                 minBufferSize.coerceAtLeast(bufferSize)
             )
             
+            // ✅ VÉRIFICATION ÉTAT AudioRecord AVANT démarrage
             if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
                 Log.e(TAG, "AudioRecord non initialisé correctement")
                 audioRecord?.release()

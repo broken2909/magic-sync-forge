@@ -1,0 +1,17 @@
+3f997b88a703a0d76425105ffe17f82c  app/src/main/java/com/magiccontrol/MagicControlApplication.kt
+592f2fbe98d10ef38ce3d785597b72e4  app/src/main/java/com/magiccontrol/MainActivity.kt
+4cac4446c8dcab08d1b6e5275f073ff3  app/src/main/java/com/magiccontrol/accessibility/MagicAccessibilityService.kt
+f5b380657698fc5b2ddba562a9ba2260  app/src/main/java/com/magiccontrol/command/CommandProcessor.kt
+1765cf72be3b0b0bd9d1d232e1780027  app/src/main/java/com/magiccontrol/recognizer/WakeWordDetector.kt
+0c53c39bc79829f7c72c0327aa33fde5  app/src/main/java/com/magiccontrol/service/FullRecognitionService.kt
+192fb3b8f3e6527a8f669f6e8a5b1fb9  app/src/main/java/com/magiccontrol/service/ModelDownloadService.kt
+3a24bfda87d760b4feb256cce06a6a24  app/src/main/java/com/magiccontrol/service/WakeWordService.kt
+5137bf0d701ff95a8e964177a2430783  app/src/main/java/com/magiccontrol/system/SystemIntegration.kt
+922a8e90944b656a354e24762f7febc4  app/src/main/java/com/magiccontrol/tts/TTSManager.kt
+fd3f12b7fd9803be6432b2a1b8bf5c0b  app/src/main/java/com/magiccontrol/ui/components/VoiceButtonView.kt
+cd27d3850ebd090549a45e3552717309  app/src/main/java/com/magiccontrol/ui/settings/SettingsActivity.kt
+a6b32516a47dfc620937bc6ae6daaac3  app/src/main/java/com/magiccontrol/ui/settings/SettingsFragment.kt
+555fc0f8a8bd1c34cbfb1e84a35870df  app/src/main/java/com/magiccontrol/utils/KeywordUtils.kt
+40b6ef7dcba11133f40607bdfc2a6eb6  app/src/main/java/com/magiccontrol/utils/PreferencesManager.kt
+4716566cc0ba829ff2e10597b1dbcfd7  app/src/main/java/com/magiccontrol/utils/WelcomeManager.kt
+a2df4f92687e262b90d5741d7bbf7d15  app/src/main/java/com/magiccontrol/utils/ModelManager.kt

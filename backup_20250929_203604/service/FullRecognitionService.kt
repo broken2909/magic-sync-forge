@@ -36,6 +36,7 @@ class FullRecognitionService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "Service de reconnaissance complète créé")
+        // TTS déjà initialisé par MainActivity - NE PAS réinitialiser
         loadVoskModel()
     }
 
@@ -45,7 +46,6 @@ class FullRecognitionService : Service() {
             val modelPath = ModelManager.getModelPathForLanguage(applicationContext, currentLanguage)
             
             if (ModelManager.isModelAvailable(applicationContext, currentLanguage)) {
-                // ✅ CORRECTION: Vosk Android utilise AssetManager directement
                 voskModel = Model(applicationContext.assets, modelPath)
                 recognizer = Recognizer(voskModel, sampleRate.toFloat())
                 Log.d(TAG, "Model Vosk chargé: $modelPath")
@@ -54,8 +54,6 @@ class FullRecognitionService : Service() {
             }
         } catch (e: IOException) {
             Log.e(TAG, "Erreur chargement model Vosk", e)
-        } catch (e: Exception) {
-            Log.e(TAG, "Erreur initialisation Vosk", e)
         }
     }
 
@@ -107,10 +105,9 @@ class FullRecognitionService : Service() {
         val buffer = ByteArray(bufferSize)
         val timeout = 10000L
         val startTime = System.currentTimeMillis()
-        var commandDetected = false
 
         try {
-            while (isListening && System.currentTimeMillis() - startTime < timeout && !commandDetected) {
+            while (isListening && System.currentTimeMillis() - startTime < timeout) {
                 val bytesRead = audioRecord?.read(buffer, 0, bufferSize) ?: 0
                 if (bytesRead > 0) {
                     if (recognizer?.acceptWaveForm(buffer, bytesRead) == true) {
@@ -119,7 +116,7 @@ class FullRecognitionService : Service() {
                             val command = extractCommandFromVoskResult(it)
                             if (command.isNotBlank()) {
                                 processCommand(command)
-                                commandDetected = true
+                                break
                             }
                         }
                     }
@@ -137,16 +134,15 @@ class FullRecognitionService : Service() {
         val buffer = ByteArray(bufferSize)
         val timeout = 10000L
         val startTime = System.currentTimeMillis()
-        var commandDetected = false
 
-        while (isListening && System.currentTimeMillis() - startTime < timeout && !commandDetected) {
+        while (isListening && System.currentTimeMillis() - startTime < timeout) {
             try {
                 val bytesRead = audioRecord?.read(buffer, 0, bufferSize) ?: 0
                 if (bytesRead > 0) {
                     val command = simulateSpeechRecognition(buffer, bytesRead)
                     if (command.isNotBlank()) {
                         processCommand(command)
-                        commandDetected = true
+                        break
                     }
                 }
                 delay(100)

@@ -1,0 +1,5 @@
+08f4ffa ✨ MagicControl v1.0 - Correction crash initialisation
+9f8f8e8 FIX: Version indestructible FullRecognitionService - gestion erreurs renforcée
+81e0193 FIX: Correction constructeur Vosk + copie assets vers filesystem
+adab3e1 FIX: Corrections complètes - Permissions + Vosk + AudioRecord
+10b690d FIX: MainActivity Z.ai exact + stable - services désactivés temporairement
