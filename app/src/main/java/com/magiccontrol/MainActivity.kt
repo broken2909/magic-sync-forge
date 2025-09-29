@@ -11,12 +11,21 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
-        Toast.makeText(this, "TEST - Sans services", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "MagicControl démarré", Toast.LENGTH_SHORT).show()
         
-        // Juste le bouton settings
+        // Bouton settings
         findViewById<android.widget.Button>(R.id.settings_button)?.setOnClickListener {
             val intent = Intent(this, com.magiccontrol.ui.settings.SettingsActivity::class.java)
             startActivity(intent)
         }
+        
+        // Démarrer le service vocal
+        startWakeWordService()
+    }
+
+    private fun startWakeWordService() {
+        val serviceIntent = Intent(this, com.magiccontrol.service.WakeWordService::class.java)
+        startService(serviceIntent)
+        Toast.makeText(this, "Service vocal démarré", Toast.LENGTH_SHORT).show()
     }
 }

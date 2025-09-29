@@ -1,25 +1,16 @@
 package com.magiccontrol.ui.settings
 
 import android.os.Bundle
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.magiccontrol.R
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.settings_activity)
         
-        setSupportActionBar(findViewById(R.id.toolbar))
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        
-        supportFragmentManager
-            .beginTransaction()
-            .replace(R.id.settings_container, SettingsFragment())
-            .commit()
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        finish()
-        return true
+        val textView = TextView(this)
+        textView.text = "Paramètres - En développement"
+        textView.textSize = 18f
+        setContentView(textView)
     }
 }
