@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 CORRECTION CONSTRUCTEUR VOSK FINALE..."
+
+# 1. Corriger FullRecognitionService avec Model(context, path)
+cat > app/src/main/java/com/magiccontrol/service/FullRecognitionService.kt << 'FILE1'
 package com.magiccontrol.service
 
 import android.app.Service
@@ -208,3 +213,17 @@ class FullRecognitionService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 }
+FILE1
+
+# 2. Corriger aussi WakeWordDetector si nécessaire
+echo "🔍 Vérification WakeWordDetector..."
+if grep -q "Model(" app/src/main/java/com/magiccontrol/recognizer/WakeWordDetector.kt; then
+    echo "⚠️  WakeWordDetector utilise Vosk - À corriger aussi"
+else
+    echo "✅ WakeWordDetector n'utilise pas Vosk directement"
+fi
+
+echo ""
+echo "✅ CORRECTIONS APPLIQUÉES!"
+echo "🎯 Changement: Model(context, path) pour Android assets"
+echo "🚀 Prêt pour nouveau push GitHub!"
