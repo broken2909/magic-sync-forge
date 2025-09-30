@@ -18,13 +18,12 @@ class MainActivity : AppCompatActivity() {
 
         setupToolbar()
         setupButtons()
-        // startWakeWordService()
+        // startWakeWordService() // 🚨 TEST: Désactivé temporairement
         
         // 🔥 BIENVENUE VOCAL UNIQUE
-        // Message uniquement au premier lancement
         android.os.Handler().postDelayed({
             FirstLaunchWelcome.playWelcomeIfFirstLaunch(this)
-        }, 800) // Délai pour stabilité
+        }, 800)
     }
 
     private fun setupToolbar() {
@@ -41,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun // startWakeWordService() {
+    private fun startWakeWordService() {
         val intent = Intent(this, WakeWordService::class.java)
         startService(intent)
     }
