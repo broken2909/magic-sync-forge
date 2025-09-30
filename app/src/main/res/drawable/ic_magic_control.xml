@@ -4,18 +4,16 @@
     android:height="120dp"
     android:viewportWidth="120"
     android:viewportHeight="120">
-    
-    <!-- Cercle de fond accent -->
-    <circle
-        android:cx="60"
-        android:cy="60"
-        android:r="56"
-        android:fill="#58a6ff" />
+
+    <!-- Cercle de fond converti en commandes pathData -->
+    <path
+        android:fillColor="#58a6ff"
+        android:pathData="M 60, 4 a 56, 56 0 1, 1 0, 112 a 56, 56 0 1, 1 0, -112 z" />
         
-    <!-- Symbole magic/wave -->
+    <!-- Symbole magic/wave (original préservé) -->
     <path
         android:strokeColor="#0d1117"
         android:strokeWidth="4"
-        android:strokeLinecap="round"
+        android:strokeLineCap="round"
         android:pathData="M40,40 Q60,20 80,40 Q60,60 40,80 Q60,100 80,80" />
 </vector>
