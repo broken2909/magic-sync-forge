@@ -4,6 +4,9 @@ plugins {
 }
 
 android {
+    buildFeatures {
+        dataBinding true
+    }
     compileSdk 34
     namespace 'com.magiccontrol'
 
