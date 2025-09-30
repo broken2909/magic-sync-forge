@@ -3,66 +3,64 @@
     android:height="100dp"
     android:viewportWidth="100"
     android:viewportHeight="100">
-    
+
     <!-- Cercle de fond -->
     <circle
-        android:cx="50"
-        android:cy="50"
-        android:r="40"
-        android:fill="#58a6ff" /> <!-- Couleur accent Z.ai -->
-    
+        cx="50"
+        cy="50"
+        r="40"
+        fill="#58a6ff" /> <!-- github_accent -->
+
     <!-- Base du micro -->
     <rect
-        android:x="45"
-        android:y="25"
-        android:width="10"
-        android:height="30"
-        android:fill="#c9d1d9" /> <!-- Couleur texte Z.ai -->
-    
+        x="45dp"
+        y="25dp"
+        width="10dp"
+        height="30dp"
+        fill="#c9d1d9" /> <!-- github_text -->
+
     <!-- Grille du micro -->
     <rect
-        android:x="42"
-        android:y="20"
-        android:width="16"
-        android:height="5"
-        android:rx="2"
-        android:fill="#0d1117" /> <!-- Background Z.ai -->
-    
+        x="42dp"
+        y="20dp"
+        width="16dp"
+        height="5dp"
+        rx="2dp"
+        fill="#0d1117" /> <!-- github_bg -->
+
     <!-- Onde sonore 1 (interne) -->
     <circle
-        android:cx="50"
-        android:cy="50"
-        android:r="30"
-        android:stroke="#58a6ff"
-        android:strokeWidth="2"
-        android:fill="?attr/colorOnPrimary" />
-    
+        cx="50"
+        cy="50"
+        r="30"
+        stroke="#58a6ff"
+        strokeWidth="2"
+        fill="#161b22" /> <!-- github_surface -->
+
     <!-- Onde sonore 2 (externe) -->
     <circle
-        android:cx="50"
-        android:cy="50"
-        android:r="45"
-        android:stroke="#58a6ff"
-        android:strokeWidth="1.5"
-        android:fill="?attr/colorOnPrimary" />
-        
+        cx="50"
+        cy="50"
+        r="45"
+        stroke="#58a6ff"
+        strokeWidth="1.5"
+        fill="#161b22" /> <!-- github_surface -->
+
     <!-- Animation des ondes (pour interaction future) -->
-    <group android:name="sound_waves">
+    <group>
         <circle
-            android:name="wave1"
-            android:cx="50"
-            android:cy="50"
-            android:r="30"
-            android:stroke="#58a6ff"
-            android:strokeWidth="2"
-            android:fill="?attr/colorOnPrimary" />
+            cx="50"
+            cy="50"
+            r="30"
+            stroke="#58a6ff"
+            strokeWidth="2"
+            fill="#161b22" /> <!-- github_surface -->
         <circle
-            android:name="wave2"
-            android:cx="50"
-            android:cy="50"
-            android:r="45"
-            android:stroke="#58a6ff"
-            android:strokeWidth="1.5"
-            android:fill="?attr/colorOnPrimary" />
+            cx="50"
+            cy="50"
+            r="45"
+            stroke="#58a6ff"
+            strokeWidth="1.5"
+            fill="#161b22" /> <!-- github_surface -->
     </group>
 </vector>
