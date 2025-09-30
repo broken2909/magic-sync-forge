@@ -1,71 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="120dp"
     android:height="120dp"
     android:viewportWidth="120"
-    android:viewportHeight="120"
-    android:autoMirrored="true">
+    android:viewportHeight="120">
 
-    <!-- FACE 1: MC stylisé -->
-    <group
-        android:name="face_mc"
-        android:pivotX="60"
-        android:pivotY="60">
-        
-        <!-- Cercle de fond bleu -->
-        <circle
-            cx="60"
-            cy="60"
-            r="50"
-            fill="#58a6ff" />
-        
-        <!-- Lettre M stylisée -->
-        <path
-            fill="#c9d1d9"
-            pathData="M40,40 L48,60 L40,80 L50,80 L55,65 L60,80 L70,80 L62,60 L70,40 L60,40 L55,55 L50,40 Z" />
-        
-        <!-- Lettre C stylisée -->
-        <path
-            fill="#c9d1d9" 
-            pathData="M75,40 C65,40 55,50 55,60 C55,70 65,80 75,80 C80,80 85,75 88,70 L82,66 C80,70 78,72 75,72 C70,72 65,67 65,60 C65,53 70,48 75,48 C78,48 80,50 82,54 L88,50 C85,45 80,40 75,40 Z" />
-    </group>
+    <!-- Cercle de fond -->
+    <circle
+        android:cx="60"
+        android:cy="60"
+        android:r="50"
+        android:fill="#58a6ff" />
 
-    <!-- FACE 2: Onde sonique (visible pendant la rotation) -->
-    <group
-        android:name="face_wave"
-        android:pivotX="60"
-        android:pivotY="60">
-        
-        <!-- Cercle central -->
-        <circle
-            cx="60"
-            cy="60"
-            r="15"
-            fill="#58a6ff" />
-        
-        <!-- Onde 1 -->
-        <circle
-            cx="60"
-            cy="60"
-            r="30"
-            stroke="#58a6ff"
-            strokeWidth="3"
-            fill="#00000000" />
-        
-        <!-- Onde 2 -->
-        <circle
-            cx="60"
-            cy="60"
-            r="45"
-            stroke="#58a6ff"
-            strokeWidth="2"
-            fill="#00000000" />
-            
-        <!-- Point sonique -->
-        <circle
-            cx="75"
-            cy="45"
-            r="4"
-            fill="#c9d1d9" />
-    </group>
+    <!-- Lettre M -->
+    <path
+        android:fill="#c9d1d9"
+        android:pathData="M45,45 L50,60 L45,75 L50,75 L55,65 L60,75 L65,75 L60,60 L65,45 L60,45 L55,55 L50,45 Z" />
+
+    <!-- Lettre C -->
+    <path
+        android:fill="#c9d1d9"
+        android:pathData="M75,45 C65,45 55,55 55,65 C55,75 65,85 75,85 C85,85 95,75 95,65 C95,55 85,45 75,45 Z M75,50 C80,50 85,55 85,60 C85,65 80,70 75,70 C70,70 65,65 65,60 C65,55 70,50 75,50 Z" />
 
 </vector>
