@@ -42,7 +42,7 @@
         android:src="@drawable/ic_mic"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/voice_button_desc"
-        app:layout_constraintTop_toBottomOf="@id/status_text"
+        app:layout_constraintTop_toBottomOf="@id/logo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
