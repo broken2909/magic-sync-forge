@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 CORRECTION STRUCTURE XML"
+
+# Recréer le fichier correctement structuré
+cat > app/src/main/res/values/strings.xml << 'XML'
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MagicControl</string>
@@ -33,3 +38,13 @@
     <!-- Welcome messages -->
     <string name="welcome_message">Welcome to your MagicControl voice assistant</string>
 </resources>
+XML
+
+echo "✅ STRUCTURE CORRIGÉE :"
+echo "• Balise </resources> à la fin"
+echo "• welcome_message DANS la balise resources"
+echo "• Fichier XML bien formé"
+
+echo ""
+echo "🔍 VÉRIFICATION :"
+cat app/src/main/res/values/strings.xml | tail -5
