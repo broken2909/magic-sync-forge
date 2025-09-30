@@ -32,33 +32,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Texte d'état - MAINTENANT VIDE -->
-    <TextView
-        android:id="@+id/status_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text=""  <!-- VIDÉ -->
-        android:textColor="@color/text_secondary"
-        android:textSize="16sp"
-        app:layout_constraintTop_toBottomOf="@id/logo"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Bouton vocal STUDIO - POSITION CONSERVÉE -->
+    <!-- Bouton vocal -->
     <ImageButton
         android:id="@+id/voice_button"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_marginTop="48dp"
-        android:src="@drawable/ic_mic_studio"
+        android:src="@drawable/ic_mic"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/voice_button_desc"
-        app:layout_constraintTop_toBottomOf="@id/status_text"  <!-- TOUJOURS SOUS status_text -->
+        app:layout_constraintTop_toBottomOf="@id/status_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Bouton des paramètres - POSITION CONSERVÉE -->
+    <!-- Bouton des paramètres -->
     <Button
         android:id="@+id/settings_button"
         android:layout_width="wrap_content"
