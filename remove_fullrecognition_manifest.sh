@@ -1,3 +1,11 @@
+#!/bin/bash
+echo "🔧 RETRAIT SÉCURISÉ DE FullRecognitionService DU MANIFEST"
+
+# Création d'une sauvegarde
+cp app/src/main/AndroidManifest.xml app/src/main/AndroidManifest.xml.backup
+
+# Retrait de la déclaration FullRecognitionService
+cat > app/src/main/AndroidManifest.xml << 'MANIFEST'
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
@@ -64,3 +72,19 @@
     </application>
 
 </manifest>
+MANIFEST
+
+echo ""
+echo "✅ RETRAIT TERMINÉ :"
+echo "• FullRecognitionService retiré du manifest"
+echo "• Backup créé: AndroidManifest.xml.backup"
+echo "• WakeWordService, ModelDownloadService et MagicAccessibilityService conservés"
+
+echo ""
+echo "🔍 VÉRIFICATION :"
+grep -n "FullRecognitionService" app/src/main/AndroidManifest.xml && echo "❌ Présent" || echo "✅ Absent"
+
+echo ""
+echo "🎯 TEST :"
+echo "Le TTS de bienvenue devrait maintenant détecter la langue système correctement"
+echo "Sans simulation de FullRecognitionService"

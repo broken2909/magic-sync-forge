@@ -34,20 +34,27 @@
             </intent-filter>
         </activity>
 
-        <!-- Service de détection du mot d'activation -->
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+          android:theme="@style/Theme.MagicControl"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
         <service
             android:name=".service.WakeWordService"
             android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="microphone" />
+            android:exported="false" />
 
-        <!-- Service de téléchargement des modèles -->
+        <service
+            android:name=".service.FullRecognitionService"
+            android:enabled="true"
+            android:exported="false" />
+
         <service
             android:name=".service.ModelDownloadService"
             android:enabled="true"
             android:exported="false" />
 
-        <!-- Service d'accessibilité pour les commandes système -->
         <service
             android:name=".accessibility.MagicAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
@@ -60,7 +67,5 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-
     </application>
-
 </manifest>
