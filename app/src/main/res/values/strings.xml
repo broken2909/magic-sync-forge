@@ -29,4 +29,5 @@
     <string name="bluetooth_off">Bluetooth désactivé</string>
     <string name="go_home">Retour à l\'accueil</string>
     <string name="go_back">Retour</string>
+    <string name="welcome_message">Dites Magic pour commencer</string>
 </resources>
