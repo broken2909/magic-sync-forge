@@ -22,12 +22,12 @@ class MainActivity : AppCompatActivity() {
 
         setupToolbar(toolbar)
         setupButtons(voiceButton, settingsButton)
-        // startWakeWordService() // 🚨 TEST: Désactivé temporairement
+        startWakeWordService() // 🚨 TEST: Désactivé temporairement
         
         // 🔥 BIENVENUE VOCAL UNIQUE
         android.os.Handler().postDelayed({
             FirstLaunchWelcome.playWelcomeIfFirstLaunch(this)
-        }, 800)
+        }, 2000)
     }
 
     private fun setupToolbar(toolbar: Toolbar) {
