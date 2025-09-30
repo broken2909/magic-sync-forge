@@ -1,69 +1,53 @@
 package com.magiccontrol
 
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.media.MediaPlayer
 import android.os.Bundle
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import com.magiccontrol.tts.TTSManager
+import com.magiccontrol.databinding.ActivityMainBinding
+import com.magiccontrol.service.WakeWordService
+import com.magiccontrol.utils.FirstLaunchWelcome
 
 class MainActivity : AppCompatActivity() {
 
-    private val audioPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            onMicrophoneGranted()
-        } else {
-            onMicrophoneDenied()
-        }
-    }
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // ✅ SON TOAST SEULEMENT
-        playWelcomeSound()
+        setupToolbar()
+        setupButtons()
+        startWakeWordService()
         
-        // ✅ INIT TTS (pour futures fonctionnalités)
-        TTSManager.initialize(this)
-        
-        checkMicrophonePermission()
+        // 🔥 BIENVENUE VOCAL UNIQUE
+        // Message uniquement au premier lancement
+        android.os.Handler().postDelayed({
+            FirstLaunchWelcome.playWelcomeIfFirstLaunch(this)
+        }, 800) // Délai pour stabilité
     }
 
-    private fun playWelcomeSound() {
-        try {
-            val mediaPlayer = MediaPlayer.create(this, R.raw.welcome_sound)
-            mediaPlayer?.setOnCompletionListener { mp ->
-                mp.release()
-            }
-            mediaPlayer?.start()
-        } catch (e: Exception) {
-            // Son non critique
+    private fun setupToolbar() {
+        setSupportActionBar(binding.toolbar)
+    }
+
+    private fun setupButtons() {
+        binding.voiceButton.setOnClickListener {
+            // TODO: Implement direct voice command
+        }
+
+        binding.settingsButton.setOnClickListener {
+            // TODO: Open settings activity
         }
     }
 
-    private fun checkMicrophonePermission() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.RECORD_AUDIO
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            onMicrophoneGranted()
-        } else {
-            audioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
-        }
+    private fun startWakeWordService() {
+        val intent = Intent(this, WakeWordService::class.java)
+        startService(intent)
     }
 
-    private fun onMicrophoneGranted() {
-        Toast.makeText(this, "Microphone autorisé", Toast.LENGTH_LONG).show()
-    }
-
-    private fun onMicrophoneDenied() {
-        Toast.makeText(this, "Microphone refusé", Toast.LENGTH_LONG).show()
+    override fun onDestroy() {
+        super.onDestroy()
+        // Cleanup if needed
     }
 }

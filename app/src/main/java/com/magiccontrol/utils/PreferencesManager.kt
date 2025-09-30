@@ -53,4 +53,8 @@ object PreferencesManager {
     fun setFirstLaunch(context: Context, isFirst: Boolean) {
         getPreferences(context).edit().putBoolean("first_launch", isFirst).apply()
     }
+    
+    fun setFirstLaunchComplete(context: Context) {
+        getPreferences(context).edit().putBoolean("first_launch", false).apply()
+    }
 }
