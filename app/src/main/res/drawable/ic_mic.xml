@@ -1,46 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="100dp"
-    android:height="100dp"
-    android:viewportWidth="100"
-    android:viewportHeight="100">
-
-    <!-- Base circulaire du micro (couleur de surface) -->
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
     <path
-        android:fillColor="@color/github_surface"
-        android:strokeColor="@color/github_border"
-        android:strokeWidth="1"
-        android:pathData="M50,10 A40,40 0 1,1 50,90 A40,40 0 1,1 50,10 Z"/>
-
-    <!-- Corps principal du micro (couleur accent) -->
+        android:fillColor="#58a6ff"
+        android:pathData="M12,14c1.66,0,3-1.34,3-3V5c0-1.66-1.34-3-3-3S9,3.34,9,5v6C9,12.66,10.34,14,12,14z" />
     <path
-        android:fillColor="@color/github_accent"
-        android:pathData="M45,30 L45,55 A5,5 0 0,0 55,55 L55,30 A5,5 0 0,0 45,30 Z"/>
-
-    <!-- Grille du micro (couleur texte) -->
-    <path
-        android:strokeColor="@color/github_text"
-        android:strokeWidth="1"
-        android:pathData="M48,35 L48,50 M52,35 L52,50"/>
-
-    <!-- Support du micro (couleur texte) -->
-    <path
-        android:strokeColor="@color/github_text"
-        android:strokeWidth="2"
-        android:pathData="M50,55 L50,65"/>
-
-    <!-- Onde sonore simple (couleur accent) -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="@color/github_accent"
-        android:strokeWidth="1.5"
-        android:pathData="M35,65 A15,15 0 0,1 65,65"/>
-        
-    <!-- Détail circulaire intérieur (couleur border) -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="@color/github_border"
-        android:strokeWidth="0.5"
-        android:pathData="M50,20 A30,30 0 1,1 50,80 A30,30 0 1,1 50,20 Z"/>
-
+        android:fillColor="#58a6ff"
+        android:pathData="M17,11c0,2.76-2.24,5-5,5s-5-2.24-5-5H5c0,3.53,2.61,6.43,6,6.92V21h2v-3.08c3.39-0.49,6-3.39,6-6.92H17z" />
 </vector>
