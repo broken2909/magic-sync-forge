@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
 
         setupToolbar()
         setupButtons()
-        startWakeWordService()
+        // startWakeWordService()
         
         // 🔥 BIENVENUE VOCAL UNIQUE
         // Message uniquement au premier lancement
@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startWakeWordService() {
+    private fun // startWakeWordService() {
         val intent = Intent(this, WakeWordService::class.java)
         startService(intent)
     }
