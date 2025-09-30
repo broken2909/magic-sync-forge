@@ -15,6 +15,9 @@ object FirstLaunchWelcome {
         if (PreferencesManager.isFirstLaunch(context)) {
             Log.d(TAG, "Premier lancement détecté")
             
+            // Initialiser TTS avant de parler
+            TTSManager.initialize(context)
+            
             // Message fixe - Le TTS Android gère automatiquement la langue système
             val message = "Bienvenue dans votre assistant vocal MagicControl"
             
