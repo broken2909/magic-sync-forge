@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         
         // 🔥 BIENVENUE VOCAL UNIQUE
         android.os.Handler().postDelayed({
-            FirstLaunchWelcome.playWelcomeIfFirstLaunch(this)
+            // FirstLaunchWelcome.playWelcomeIfFirstLaunch(this)
         }, 800)
     }
 
