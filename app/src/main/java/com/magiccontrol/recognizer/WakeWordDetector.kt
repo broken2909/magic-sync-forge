@@ -30,16 +30,16 @@ class WakeWordDetector(private val context: Context) {
 
     private fun loadVoskModel() {
         try {
+            // CORRECTION : Utiliser la langue des préférences utilisateur
             val currentLanguage = PreferencesManager.getCurrentLanguage(context)
             val modelPath = ModelManager.getModelPathForLanguage(context, currentLanguage)
             
             if (ModelManager.isModelAvailable(context, currentLanguage)) {
-                // CONSTRUCTEUR ORIGINAL STABLE
                 voskModel = Model(context.assets, modelPath)
                 recognizer = Recognizer(voskModel, sampleRate.toFloat())
-                Log.d(TAG, "Model Vosk chargé: $modelPath")
+                Log.d(TAG, "Model Vosk chargé: $modelPath pour langue: $currentLanguage")
             } else {
-                Log.w(TAG, "Model non disponible - Utilisation mode simulation")
+                Log.w(TAG, "Model non disponible pour langue: $currentLanguage - Utilisation mode simulation")
             }
         } catch (e: IOException) {
             Log.e(TAG, "Erreur chargement model Vosk", e)
@@ -86,7 +86,7 @@ class WakeWordDetector(private val context: Context) {
                 }
             }.start()
 
-            Log.d(TAG, "Détection Vosk démarrée")
+            Log.d(TAG, "Détection Vosk démarrée pour langue: ${PreferencesManager.getCurrentLanguage(context)}")
 
         } catch (e: Exception) {
             Log.e(TAG, "Erreur démarrage écoute Vosk", e)
