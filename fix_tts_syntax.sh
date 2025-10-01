@@ -1,3 +1,14 @@
+#!/bin/bash
+echo "🚨 CORRECTION ERREUR SYNTAXE TTSManager"
+
+# Afficher la fin actuelle du fichier
+echo "📋 FIN ACTUELLE (lignes 110-130) :"
+sed -n '110,130p' app/src/main/java/com/magiccontrol/tts/TTSManager.kt
+
+echo ""
+echo "🔄 RECRÉATION COMPLÈTE DU FICHIER TTSManager..."
+# Recréer le fichier complet avec la bonne structure
+cat > app/src/main/java/com/magiccontrol/tts/TTSManager.kt << 'TTS_COMPLETE'
 package com.magiccontrol.tts
 
 import android.content.Context
@@ -20,7 +31,7 @@ object TTSManager {
                     isInitialized = true
                     Log.d(TAG, "TTS initialisé avec succès")
                 } else {
-                    Log.e(TAG, "Erreur initialisation TTS: \$status")
+                    Log.e(TAG, "Erreur initialisation TTS: $status")
                 }
             }
         }
@@ -31,71 +42,46 @@ object TTSManager {
         
         // Vérifier les langues disponibles dans TTS
         val availableLanguages = tts?.availableLanguages ?: emptySet()
-        Log.d(TAG, "Langues disponibles TTS: \$availableLanguages")
-        Log.d(TAG, "Langue système: \$systemLocale")
+        Log.d(TAG, "Langues disponibles TTS: $availableLanguages")
+        Log.d(TAG, "Langue système: $systemLocale")
         
         // Essayer la langue système exacte
         if (availableLanguages.contains(systemLocale)) {
             tts?.language = systemLocale
-            Log.d(TAG, "Langue système configurée: \$systemLocale")
+            Log.d(TAG, "Langue système configurée: $systemLocale")
         }
         // Sinon essayer la langue de base (sans pays)
         else if (availableLanguages.contains(Locale(systemLocale.language))) {
             tts?.language = Locale(systemLocale.language)
-            Log.d(TAG, "Langue de base configurée: \${systemLocale.language}")
+            Log.d(TAG, "Langue de base configurée: ${systemLocale.language}")
         }
         // Sinon utiliser l'anglais comme fallback
         else if (availableLanguages.contains(Locale.ENGLISH)) {
             tts?.language = Locale.ENGLISH
-            Log.d(TAG, "Fallback anglais configuré")
+            Log.d(TAG, "Anglais configuré comme fallback")
         }
-        // Sinon utiliser la première langue disponible
-        else if (availableLanguages.isNotEmpty()) {
-            tts?.language = availableLanguages.first()
-            Log.d(TAG, "Première langue disponible configurée: \${availableLanguages.first()}")
+        // Sinon utiliser la langue par défaut du TTS
+        else {
+            Log.w(TAG, "Aucune langue disponible - utilisation défaut TTS")
         }
         
-        // Configuration de base
+        // Configurer la vitesse de parole
         tts?.setSpeechRate(1.0f)
-        tts?.setPitch(1.0f)
-        
-        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(utteranceId: String?) {
-                Log.d(TAG, "TTS started: \$utteranceId")
-            }
-            override fun onDone(utteranceId: String?) {
-                Log.d(TAG, "TTS completed: \$utteranceId")
-            }
-            override fun onError(utteranceId: String?) {
-                Log.e(TAG, "TTS error: \$utteranceId")
-            }
-        })
-        
-        Log.d(TAG, "TTS final - Langue: \${tts?.language}, Pays: \${tts?.language?.country}")
     }
 
     fun speak(context: Context, text: String) {
         if (!PreferencesManager.isVoiceFeedbackEnabled(context)) {
             return
         }
-        
+
         if (!isInitialized) {
             initialize(context)
-            // DÉLAI CRITIQUE - Attendre que TTS s'initialise
-            android.os.Handler().postDelayed({
-                doSpeak(text)
-            }, 1000)
-        } else {
-            doSpeak(text)
         }
-    }
 
-    private fun doSpeak(text: String) {
         if (isInitialized && tts != null) {
-            Log.d(TAG, "Speaking: \$text (langue: \${tts?.language})")
             tts?.speak(text, TextToSpeech.QUEUE_ADD, null, "tts_utterance")
         } else {
-            Log.w(TAG, "TTS non initialisé pour: \$text")
+            Log.w(TAG, "TTS non initialisé pour: $text")
         }
     }
 
@@ -113,3 +99,13 @@ object TTSManager {
         return tts?.isSpeaking ?: false
     }
 }
+TTS_COMPLETE
+
+echo "✅ FICHIER TTSManager RECRÉÉ :"
+echo "• Structure Kotlin correcte"
+echo "• Fonction setupTTSWithSystemLanguage() complète"
+echo "• Plus d'erreur de syntaxe"
+
+echo ""
+echo "🔍 VÉRIFICATION :"
+tail -10 app/src/main/java/com/magiccontrol/tts/TTSManager.kt

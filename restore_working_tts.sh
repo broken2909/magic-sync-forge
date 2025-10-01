@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 RESTAURATION TTS FONCTIONNEL + AMÉLIORATIONS STABLES"
+
+# 1. Restaurer l'ancienne logique TTS avec délai
+cat > app/src/main/java/com/magiccontrol/tts/TTSManager.kt << 'TTS'
 package com.magiccontrol.tts
 
 import android.content.Context
@@ -113,3 +118,21 @@ object TTSManager {
         return tts?.isSpeaking ?: false
     }
 }
+TTS
+
+# 2. Corriger FirstLaunchWelcome pour utiliser la traduction
+sed -i 's/val message = "Bienvenue dans votre assistant vocal MagicControl"/val message = context.getString(R.string.welcome_message)/' app/src/main/java/com/magiccontrol/utils/FirstLaunchWelcome.kt
+
+echo ""
+echo "✅ RESTAURATION TERMINÉE :"
+echo "• Ancienne logique TTS avec délai de 1000ms RESTAURÉE"
+echo "• FirstLaunchWelcome utilise MAINTENANT R.string.welcome_message"
+echo "• Structure XML et manifest propres GARDÉES"
+
+echo ""
+echo "🔍 VÉRIFICATIONS :"
+echo "Délai TTS restauré :"
+grep -n "postDelayed" app/src/main/java/com/magiccontrol/tts/TTSManager.kt
+echo ""
+echo "Traduction activée :"
+grep -n "getString" app/src/main/java/com/magiccontrol/utils/FirstLaunchWelcome.kt

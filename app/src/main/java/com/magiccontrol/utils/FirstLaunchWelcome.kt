@@ -19,7 +19,7 @@ object FirstLaunchWelcome {
             TTSManager.initialize(context)
             
             // Message fixe - Le TTS Android gère automatiquement la langue système
-            val message = "Bienvenue dans votre assistant vocal MagicControl"
+            val message = context.getString(R.string.welcome_message)
             
             // Jouer le message DIRECTEMENT sans Handler supplémentaire
             try {
