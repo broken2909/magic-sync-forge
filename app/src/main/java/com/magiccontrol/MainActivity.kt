@@ -1,51 +1,72 @@
 package com.magiccontrol
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.media.MediaPlayer
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.magiccontrol.databinding.ActivityMainBinding
+import androidx.core.content.ContextCompat
 import com.magiccontrol.service.WakeWordService
 import com.magiccontrol.utils.FirstLaunchWelcome
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var binding: ActivityMainBinding
+    
+    // Contrat pour la demande de permission
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission accordée - démarrer le service
+            startWakeWordService()
+        } else {
+            // Permission refusée
+            android.util.Log.w("MainActivity", "Permission microphone refusée")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        setupToolbar()
-        setupButtons()
+        setContentView(R.layout.activity_main)
         
-        // Message bienvenue simple
+        // Activation du message vocal de bienvenue au premier lancement
         FirstLaunchWelcome.playWelcomeIfFirstLaunch(this)
         
-        // Démarrer service vocal
-        startWakeWordService()
+        // Jouer le son de bienvenue à CHAQUE ouverture
+        playWelcomeSound()
+        
+        // DEMANDER la permission micro
+        requestMicrophonePermission()
     }
-
-    private fun setupToolbar() {
-        setSupportActionBar(binding.toolbar)
-    }
-
-    private fun setupButtons() {
-        binding.voiceButton.setOnClickListener {
-            // TODO: Implement direct voice command
+    
+    private fun playWelcomeSound() {
+        try {
+            val mediaPlayer = MediaPlayer.create(this, R.raw.welcome_sound)
+            mediaPlayer?.setOnCompletionListener { it.release() }
+            mediaPlayer?.start()
+        } catch (e: Exception) {
+            // Ignorer les erreurs de son
         }
-
-        binding.settingsButton.setOnClickListener {
-            // TODO: Open settings activity
+    }
+    
+    private fun requestMicrophonePermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // Permission déjà accordée - démarrer le service
+                startWakeWordService()
+            }
+            else -> {
+                // Demander la permission
+                requestPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+            }
         }
     }
-
+    
     private fun startWakeWordService() {
         val intent = Intent(this, WakeWordService::class.java)
         startService(intent)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 }

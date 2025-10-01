@@ -3,42 +3,38 @@ package com.magiccontrol.utils
 import android.content.Context
 import android.util.Log
 import com.magiccontrol.tts.TTSManager
+import com.magiccontrol.R
 
 object FirstLaunchWelcome {
     private const val TAG = "FirstLaunchWelcome"
-    
+
+    /**
+     * Joue le message de bienvenue uniquement au premier lancement
+     */
     fun playWelcomeIfFirstLaunch(context: Context) {
-        val prefs = context.getSharedPreferences("magic_control_prefs", Context.MODE_PRIVATE)
-        val isFirstLaunch = prefs.getBoolean("first_launch", true)
-        
-        if (isFirstLaunch) {
-            Log.d(TAG, "Premier lancement - Son et message bienvenue")
+        // Vérifier si c'est le premier lancement
+        if (PreferencesManager.isFirstLaunch(context)) {
+            Log.d(TAG, "Premier lancement détecté")
             
-            // Son welcome
-            val welcomeSound = loadWelcomeSound(context)
-            welcomeSound?.start()
+            // Initialiser TTS avant de parler
+            TTSManager.initialize(context)
             
-            // Message bienvenue simple
-            val message = "Bienvenue dans Magic Control. Votre assistant vocal pour malvoyants."
-            TTSManager.speak(context, message)
+            // Message MULTILINGUE via ressources système
+            val message = context.getString(R.string.welcome_message)
             
-            // Marquer comme lancé
-            prefs.edit().putBoolean("first_launch", false).apply()
-        }
-    }
-    
-    private fun loadWelcomeSound(context: Context): android.media.MediaPlayer? {
-        return try {
-            val soundResource = context.resources.getIdentifier("welcome_sound", "raw", context.packageName)
-            if (soundResource != 0) {
-                android.media.MediaPlayer.create(context, soundResource)
-            } else {
-                Log.w(TAG, "Son de bienvenue non trouvé")
-                null
+            // Jouer le message
+            try {
+                TTSManager.speak(context, message)
+                Log.d(TAG, "Message vocal envoyé: '$message'")
+            } catch (e: Exception) {
+                Log.e(TAG, "Erreur lors de l'envoi au TTS", e)
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Erreur chargement son bienvenue", e)
-            null
+            
+            // Marquer le premier lancement comme terminé
+            PreferencesManager.setFirstLaunchComplete(context)
+            Log.d(TAG, "Premier lancement marqué comme terminé")
+        } else {
+            Log.d(TAG, "Ce n'est pas le premier lancement - message ignoré")
         }
     }
 }
