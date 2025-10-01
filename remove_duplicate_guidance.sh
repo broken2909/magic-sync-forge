@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🗑️ SUPPRESSION MESSAGE GUIDANCE DE FIRSTLAUNCHWELCOME"
+
+# Recréer FirstLaunchWelcome sans le message guidance
+cat > app/src/main/java/com/magiccontrol/utils/FirstLaunchWelcome.kt << 'CLEAN_WELCOME'
 package com.magiccontrol.utils
 
 import android.content.Context
@@ -8,26 +13,23 @@ object FirstLaunchWelcome {
     private const val TAG = "FirstLaunchWelcome"
     
     fun playWelcomeIfFirstLaunch(context: Context) {
-        // Utiliser Context directement au lieu de getPreferences privé
-        val prefs = context.getSharedPreferences("magic_control_prefs", Context.MODE_PRIVATE)
+        val prefs = PreferencesManager.getPreferences(context)
         val isFirstLaunch = prefs.getBoolean("first_launch", true)
         
         if (isFirstLaunch) {
-            Log.d(TAG, "Premier lancement - Message bienvenue unifié bilingue")
+            Log.d(TAG, "Premier lancement - Son et message bienvenue uniquement")
             
-            // Son welcome
+            // Son welcome et message bienvenue SEULEMENT
             val welcomeSound = loadWelcomeSound(context)
-            welcomeSound?.start()  // Corriger play() -> start()
+            welcomeSound?.play()
             
-            // MESSAGE BIENVENUE UNIFIÉ BILINGUE
             val currentLanguage = PreferencesManager.getCurrentLanguage(context)
-            val unifiedMessage = if (currentLanguage == "fr") {
-                "Bienvenue dans votre assistant vocal Magic Control. Magic Control nécessite une activation manuelle dans les paramètres d'accessibilité pour contrôler votre appareil. Nous recommandons une assistance pour cette étape."
+            val message = if (currentLanguage == "fr") {
+                "Bienvenue dans Magic Control. Votre assistant vocal pour malvoyants."
             } else {
-                "Welcome to your voice assistant Magic Control. Magic Control requires manual activation in accessibility settings to control your device. We recommend assistance for this step."
+                "Welcome to Magic Control. Your voice assistant for visually impaired."
             }
-            
-            TTSManager.speak(context, unifiedMessage)
+            TTSManager.speak(context, message)
             
             // Marquer comme lancé
             prefs.edit().putBoolean("first_launch", false).apply()
@@ -49,3 +51,11 @@ object FirstLaunchWelcome {
         }
     }
 }
+CLEAN_WELCOME
+
+echo ""
+echo "✅ DOUBLON SUPPRIMÉ"
+echo "📊 FirstLaunchWelcome maintenant : Son welcome + Message bienvenue uniquement"
+echo ""
+echo "🔍 VÉRIFICATION :"
+grep -c "TTSManager.speak" app/src/main/java/com/magiccontrol/utils/FirstLaunchWelcome.kt | xargs echo "Nombre de messages TTS restants:"

@@ -8,8 +8,7 @@ object FirstLaunchWelcome {
     private const val TAG = "FirstLaunchWelcome"
     
     fun playWelcomeIfFirstLaunch(context: Context) {
-        // Utiliser Context directement au lieu de getPreferences privé
-        val prefs = context.getSharedPreferences("magic_control_prefs", Context.MODE_PRIVATE)
+        val prefs = PreferencesManager.getPreferences(context)
         val isFirstLaunch = prefs.getBoolean("first_launch", true)
         
         if (isFirstLaunch) {
@@ -17,9 +16,9 @@ object FirstLaunchWelcome {
             
             // Son welcome
             val welcomeSound = loadWelcomeSound(context)
-            welcomeSound?.start()  // Corriger play() -> start()
+            welcomeSound?.play()
             
-            // MESSAGE BIENVENUE UNIFIÉ BILINGUE
+            // MESSAGE BIENVENUE UNIFIÉ BILINGUE (structure originale + guidance)
             val currentLanguage = PreferencesManager.getCurrentLanguage(context)
             val unifiedMessage = if (currentLanguage == "fr") {
                 "Bienvenue dans votre assistant vocal Magic Control. Magic Control nécessite une activation manuelle dans les paramètres d'accessibilité pour contrôler votre appareil. Nous recommandons une assistance pour cette étape."
@@ -29,7 +28,7 @@ object FirstLaunchWelcome {
             
             TTSManager.speak(context, unifiedMessage)
             
-            // Marquer comme lancé
+            // Marquer comme lancé (même structure que commit original)
             prefs.edit().putBoolean("first_launch", false).apply()
         }
     }

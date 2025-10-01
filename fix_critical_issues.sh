@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 CORRECTION CRITIQUES SYSTÈME VOCAL"
+
+# Créer la version corrigée de WakeWordService
+cat > app/src/main/java/com/magiccontrol/service/WakeWordService.kt << 'FIX'
 package com.magiccontrol.service
 
 import android.app.Service
@@ -56,3 +61,12 @@ class WakeWordService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 }
+FIX
+
+echo ""
+echo "✅ CORRECTIONS APPLIQUÉES:"
+echo "📊 PRIORITÉ 1: Message TTS guidance ajouté"
+echo "📊 PRIORITÉ 2: Callback FullRecognitionService activé"
+echo ""
+echo "🔍 VÉRIFICATION APPLIQUÉE:"
+grep -n "TTSManager.speak\|FullRecognitionService" app/src/main/java/com/magiccontrol/service/WakeWordService.kt

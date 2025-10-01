@@ -1,3 +1,13 @@
+#!/bin/bash
+echo "🔧 CORRECTION INCOHÉRENCE LANGUE WAKE WORD DETECTOR"
+
+# Vérifier le contenu actuel de WakeWordDetector
+echo ""
+echo "📋 CONTENU ACTUEL - MÉTHODE loadVoskModel()"
+grep -A 20 "loadVoskModel" app/src/main/java/com/magiccontrol/recognizer/WakeWordDetector.kt
+
+# Créer la version corrigée
+cat > app/src/main/java/com/magiccontrol/recognizer/WakeWordDetector.kt << 'FIX'
 package com.magiccontrol.recognizer
 
 import android.content.Context
@@ -140,3 +150,8 @@ class WakeWordDetector(private val context: Context) {
 
     fun isListening(): Boolean = isListening
 }
+FIX
+
+echo ""
+echo "✅ CORRECTION APPLIQUÉE"
+echo "📊 WakeWordDetector utilise maintenant PreferencesManager.getCurrentLanguage()"

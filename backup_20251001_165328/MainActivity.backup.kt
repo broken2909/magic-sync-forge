@@ -3,22 +3,21 @@ package com.magiccontrol
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import android.view.LayoutInflater
+import com.magiccontrol.databinding.ActivityMainBinding
 import com.magiccontrol.service.WakeWordService
 import com.magiccontrol.utils.FirstLaunchWelcome
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Remplacer databinding par layout inflation standard
-        val inflater = LayoutInflater.from(this)
-        val view = inflater.inflate(R.layout.activity_main, null)
-        setContentView(view)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        setupToolbar(view)
-        setupButtons(view)
+        setupToolbar()
+        setupButtons()
         
         // Message bienvenue UNIFIÉ (inclut guidance)
         FirstLaunchWelcome.playWelcomeIfFirstLaunch(this)
@@ -27,20 +26,16 @@ class MainActivity : AppCompatActivity() {
         startWakeWordService()
     }
 
-    private fun setupToolbar(view: android.view.View) {
-        val toolbar = view.findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
+    private fun setupToolbar() {
+        setSupportActionBar(binding.toolbar)
     }
 
-    private fun setupButtons(view: android.view.View) {
-        val voiceButton = view.findViewById<android.widget.ImageButton>(R.id.voice_button)
-        val settingsButton = view.findViewById<android.widget.Button>(R.id.settings_button)
-        
-        voiceButton.setOnClickListener {
+    private fun setupButtons() {
+        binding.voiceButton.setOnClickListener {
             // TODO: Implement direct voice command
         }
 
-        settingsButton.setOnClickListener {
+        binding.settingsButton.setOnClickListener {
             // TODO: Open settings activity
         }
     }

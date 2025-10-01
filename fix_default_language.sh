@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 CORRECTION LANGUE PAR DÉFAUT - FR & EN"
+
+# Créer la version corrigée de PreferencesManager
+cat > app/src/main/java/com/magiccontrol/utils/PreferencesManager.kt << 'FIX'
 package com.magiccontrol.utils
 
 import android.content.Context
@@ -59,3 +64,12 @@ object PreferencesManager {
         getPreferences(context).edit().putInt("voice_speed", speed).apply()
     }
 }
+FIX
+
+echo ""
+echo "✅ CORRECTION APPLIQUÉE"
+echo "📊 Langue par défaut: détection système + fallback fr/en"
+echo "📊 Système français → 'fr', Autres langues → 'en'"
+echo ""
+echo "🔍 VÉRIFICATION:"
+grep -A 10 "getSystemLanguage" app/src/main/java/com/magiccontrol/utils/PreferencesManager.kt
