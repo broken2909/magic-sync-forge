@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 AJOUT DEMANDE MANUELLE PERMISSION MICRO"
+
+# Modifier MainActivity pour demander la permission
+cat > app/src/main/java/com/magiccontrol/MainActivity.kt << 'MAINACTIVITY'
 package com.magiccontrol
 
 import android.content.Intent
@@ -70,3 +75,13 @@ class MainActivity : AppCompatActivity() {
         startService(intent)
     }
 }
+MAINACTIVITY
+
+echo "✅ DEMANDE PERMISSION AJOUTÉE :"
+echo "• requestPermissionLauncher pour RECORD_AUDIO"
+echo "• Vérification permission avant démarrage service"
+echo "• Demande explicite à l'utilisateur"
+
+echo ""
+echo "🔍 VÉRIFICATION :"
+grep -n "requestPermissionLauncher\\|RECORD_AUDIO" app/src/main/java/com/magiccontrol/MainActivity.kt
