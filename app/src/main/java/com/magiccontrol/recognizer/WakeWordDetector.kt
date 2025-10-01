@@ -35,7 +35,9 @@ class WakeWordDetector(private val context: Context) {
             val modelPath = ModelManager.getModelPathForLanguage(context, currentLanguage)
             
             if (ModelManager.isModelAvailable(context, currentLanguage)) {
-                voskModel = Model(context.assets, modelPath)
+                // CORRECTION : Utiliser InputStream au lieu du constructeur inexistant
+                val inputStream = context.assets.open("$modelPath/am/final.mdl")
+                voskModel = Model(inputStream)
                 recognizer = Recognizer(voskModel, sampleRate.toFloat())
                 Log.d(TAG, "Model Vosk chargé: $modelPath pour langue: $currentLanguage")
             } else {
