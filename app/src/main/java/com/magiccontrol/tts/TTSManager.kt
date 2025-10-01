@@ -29,52 +29,33 @@ object TTSManager {
     private fun setupTTSWithSystemLanguage() {
         val systemLocale = Locale.getDefault()
         
-        // ✅ 1. Vérifier les langues disponibles dans TTS
+        // Vérifier les langues disponibles dans TTS
         val availableLanguages = tts?.availableLanguages ?: emptySet()
         Log.d(TAG, "Langues disponibles TTS: $availableLanguages")
         Log.d(TAG, "Langue système: $systemLocale")
         
-        // ✅ 2. Essayer la langue système exacte
+        // Essayer la langue système exacte
         if (availableLanguages.contains(systemLocale)) {
             tts?.language = systemLocale
             Log.d(TAG, "Langue système configurée: $systemLocale")
-        } 
-        // ✅ 3. Sinon essayer la langue de base (sans pays)
+        }
+        // Sinon essayer la langue de base (sans pays)
         else if (availableLanguages.contains(Locale(systemLocale.language))) {
             tts?.language = Locale(systemLocale.language)
             Log.d(TAG, "Langue de base configurée: ${systemLocale.language}")
         }
-        // ✅ 4. Sinon utiliser l'anglais comme fallback
+        // Sinon utiliser l'anglais comme fallback
         else if (availableLanguages.contains(Locale.ENGLISH)) {
             tts?.language = Locale.ENGLISH
-            Log.d(TAG, "Fallback anglais configuré")
+            Log.d(TAG, "Anglais configuré comme fallback")
         }
-        // ✅ 5. Sinon utiliser la première langue disponible
-        else if (availableLanguages.isNotEmpty()) {
-            tts?.language = availableLanguages.first()
-            Log.d(TAG, "Première langue disponible configurée: ${availableLanguages.first()}")
+        // Sinon utiliser la langue par défaut du TTS
+        else {
+            Log.w(TAG, "Aucune langue disponible - utilisation défaut TTS")
         }
         
-        // ✅ Configuration de base
-        tts?.setSpeechRate(1.0f) // Vitesse normale
-        tts?.setPitch(1.0f)      // Ton normal
-        
-        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(utteranceId: String?) {
-                Log.d(TAG, "TTS started: $utteranceId")
-            }
-
-            override fun onDone(utteranceId: String?) {
-                Log.d(TAG, "TTS completed: $utteranceId")
-            }
-
-            override fun onError(utteranceId: String?) {
-                Log.e(TAG, "TTS error: $utteranceId")
-            }
-        })
-        
-        // ✅ Log final
-        Log.d(TAG, "TTS final - Langue: ${tts?.language}, Pays: ${tts?.language?.country}")
+        // Configurer la vitesse de parole
+        tts?.setSpeechRate(1.0f)
     }
 
     fun speak(context: Context, text: String) {
@@ -84,18 +65,9 @@ object TTSManager {
 
         if (!isInitialized) {
             initialize(context)
-            // Attendre un peu que TTS s'initialise
-            android.os.Handler().postDelayed({
-                doSpeak(text)
-            }, 1000)
-        } else {
-            doSpeak(text)
         }
-    }
-    
-    private fun doSpeak(text: String) {
+
         if (isInitialized && tts != null) {
-            Log.d(TAG, "Speaking: $text (langue: ${tts?.language})")
             tts?.speak(text, TextToSpeech.QUEUE_ADD, null, "tts_utterance")
         } else {
             Log.w(TAG, "TTS non initialisé pour: $text")
@@ -114,16 +86,5 @@ object TTSManager {
 
     fun isSpeaking(): Boolean {
         return tts?.isSpeaking ?: false
-    }
-}
-            Log.d(TAG, "Anglais configuré comme fallback")
-        }
-        // ✅ 5. Sinon utiliser la langue par défaut du TTS
-        else {
-            Log.w(TAG, "Aucune langue disponible - utilisation défaut TTS")
-        }
-        
-        // Configurer la vitesse de parole
-        tts?.setSpeechRate(1.0f)
     }
 }
