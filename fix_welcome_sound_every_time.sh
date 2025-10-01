@@ -1,10 +1,13 @@
+#!/bin/bash
+echo "🔧 CORRECTION - SON À CHAQUE OUVERTURE"
+
+# Modifier MainActivity pour son à CHAQUE ouverture
+cat > app/src/main/java/com/magiccontrol/MainActivity.kt << 'MAINACTIVITY'
 package com.magiccontrol
 
-import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.magiccontrol.service.WakeWordService
 import com.magiccontrol.utils.FirstLaunchWelcome
 
 class MainActivity : AppCompatActivity() {
@@ -17,9 +20,6 @@ class MainActivity : AppCompatActivity() {
         
         // Jouer le son de bienvenue à CHAQUE ouverture
         playWelcomeSound()
-        
-        // DÉMARRER le service de détection vocale (demande permission micro)
-        startWakeWordService()
     }
     
     private fun playWelcomeSound() {
@@ -31,9 +31,13 @@ class MainActivity : AppCompatActivity() {
             // Ignorer les erreurs de son - ne pas bloquer l'application
         }
     }
-    
-    private fun startWakeWordService() {
-        val intent = Intent(this, WakeWordService::class.java)
-        startService(intent)
-    }
 }
+MAINACTIVITY
+
+echo "✅ CORRECTION APPLIQUÉE :"
+echo "• Son joué à CHAQUE ouverture de l'application"
+echo "• Supprimé la condition isFirstLaunch() pour le son"
+
+echo ""
+echo "🔍 VÉRIFICATION :"
+grep -A 3 "playWelcomeSound()" app/src/main/java/com/magiccontrol/MainActivity.kt

@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 ACTIVATION SERVICE MICROPHONE"
+
+# Ajouter le démarrage du service dans MainActivity
+cat > app/src/main/java/com/magiccontrol/MainActivity.kt << 'MAINACTIVITY'
 package com.magiccontrol
 
 import android.content.Intent
@@ -37,3 +42,13 @@ class MainActivity : AppCompatActivity() {
         startService(intent)
     }
 }
+MAINACTIVITY
+
+echo "✅ SERVICE ACTIVÉ :"
+echo "• WakeWordService démarré dans MainActivity"
+echo "• L'app va maintenant demander l'autorisation micro"
+echo "• Service de détection vocale activé"
+
+echo ""
+echo "🔍 VÉRIFICATION :"
+grep -n "startWakeWordService\\|WakeWordService" app/src/main/java/com/magiccontrol/MainActivity.kt
