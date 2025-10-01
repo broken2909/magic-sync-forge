@@ -1,8 +1,8 @@
 #!/bin/bash
-echo "🔧 CORRECTION DÉFINITIVE VOSK - COPIE VERS STOCKAGE INTERNE"
+echo "🔧 ÉTAPE 2: CORRECTION SÉPARÉE - CONSTRUCTEUR VOSK"
 
-# Corriger WakeWordDetector avec la solution de copie
-cat > app/src/main/java/com/magiccontrol/recognizer/WakeWordDetector.kt << 'VOSK_FIXED'
+# Corriger uniquement le constructeur Model dans WakeWordDetector
+cat > app/src/main/java/com/magiccontrol/recognizer/WakeWordDetector.kt << 'FIXED'
 package com.magiccontrol.recognizer
 
 import android.content.Context
@@ -15,7 +15,6 @@ import com.magiccontrol.utils.ModelManager
 import com.magiccontrol.utils.PreferencesManager
 import org.vosk.Model
 import org.vosk.Recognizer
-import java.io.File
 import java.io.IOException
 
 class WakeWordDetector(private val context: Context) {
@@ -36,15 +35,16 @@ class WakeWordDetector(private val context: Context) {
 
     private fun loadVoskModel() {
         try {
+            // CORRECTION : Utiliser la langue des préférences utilisateur
             val currentLanguage = PreferencesManager.getCurrentLanguage(context)
             val modelPath = ModelManager.getModelPathForLanguage(context, currentLanguage)
             
             if (ModelManager.isModelAvailable(context, currentLanguage)) {
-                // CORRECTION DÉFINITIVE : Copier vers stockage interne + chemin fichier
-                val modelDir = copyModelFromAssets(context, modelPath)
-                voskModel = Model(modelDir.absolutePath)
+                // CORRECTION : Utiliser InputStream au lieu du constructeur inexistant
+                val inputStream = context.assets.open("$modelPath/am/final.mdl")
+                voskModel = Model(inputStream)
                 recognizer = Recognizer(voskModel, sampleRate.toFloat())
-                Log.d(TAG, "Model Vosk chargé depuis: ${modelDir.absolutePath}")
+                Log.d(TAG, "Model Vosk chargé: $modelPath pour langue: $currentLanguage")
             } else {
                 Log.w(TAG, "Model non disponible pour langue: $currentLanguage - Utilisation mode simulation")
             }
@@ -53,33 +53,6 @@ class WakeWordDetector(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Erreur initialisation Vosk", e)
         }
-    }
-
-    // FONCTION DE COPIE DES ASSETS VERS STOCKAGE INTERNE
-    private fun copyModelFromAssets(context: Context, assetPath: String): File {
-        val targetDir = File(context.filesDir, assetPath)
-        if (!targetDir.exists()) {
-            targetDir.mkdirs()
-            try {
-                context.assets.list(assetPath)?.forEach { fileName ->
-                    val inputStream = context.assets.open("$assetPath/$fileName")
-                    val outputFile = File(targetDir, fileName)
-                    val outputStream = outputFile.outputStream()
-                    
-                    inputStream.use { input ->
-                        outputStream.use { output ->
-                            input.copyTo(output)
-                        }
-                    }
-                    Log.d(TAG, "Fichier copié: $fileName")
-                }
-                Log.d(TAG, "Modèle copié vers: ${targetDir.absolutePath}")
-            } catch (e: Exception) {
-                Log.e(TAG, "Erreur copie modèle depuis assets", e)
-                throw e
-            }
-        }
-        return targetDir
     }
 
     fun startListening() {
@@ -174,11 +147,11 @@ class WakeWordDetector(private val context: Context) {
 
     fun isListening(): Boolean = isListening
 }
-VOSK_FIXED
+FIXED
 
-echo "✅ CORRECTION DÉFINITIVE APPLIQUÉE"
-echo "📊 Solution: Copie assets → stockage interne + Model(String path)"
-echo "📊 Constructeur valide: Model(modelDir.absolutePath)"
+echo "✅ CORRECTION APPLIQUÉE"
+echo "📊 Changement: Constructeur Model(context.assets, path) → Model(inputStream)"
+echo "📊 Fichier modifié: WakeWordDetector.kt uniquement"
 echo ""
-echo "🔍 Vérification:"
-grep -n "Model(modelDir.absolutePath)" app/src/main/java/com/magiccontrol/recognizer/WakeWordDetector.kt
+echo "🔍 Vérification ligne 38:"
+grep -n "voskModel = Model" app/src/main/java/com/magiccontrol/recognizer/WakeWordDetector.kt

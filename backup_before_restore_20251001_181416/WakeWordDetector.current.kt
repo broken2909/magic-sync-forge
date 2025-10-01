@@ -1,8 +1,3 @@
-#!/bin/bash
-echo "🔧 CORRECTION DÉFINITIVE VOSK - COPIE VERS STOCKAGE INTERNE"
-
-# Corriger WakeWordDetector avec la solution de copie
-cat > app/src/main/java/com/magiccontrol/recognizer/WakeWordDetector.kt << 'VOSK_FIXED'
 package com.magiccontrol.recognizer
 
 import android.content.Context
@@ -174,11 +169,3 @@ class WakeWordDetector(private val context: Context) {
 
     fun isListening(): Boolean = isListening
 }
-VOSK_FIXED
-
-echo "✅ CORRECTION DÉFINITIVE APPLIQUÉE"
-echo "📊 Solution: Copie assets → stockage interne + Model(String path)"
-echo "📊 Constructeur valide: Model(modelDir.absolutePath)"
-echo ""
-echo "🔍 Vérification:"
-grep -n "Model(modelDir.absolutePath)" app/src/main/java/com/magiccontrol/recognizer/WakeWordDetector.kt
