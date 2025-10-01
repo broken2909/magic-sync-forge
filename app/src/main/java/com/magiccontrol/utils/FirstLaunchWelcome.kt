@@ -14,10 +14,11 @@ object FirstLaunchWelcome {
         if (isFirstLaunch) {
             Log.d(TAG, "Premier lancement - Son et message bienvenue")
             
-            // Son welcome et message bienvenue simple
+            // Son welcome
             val welcomeSound = loadWelcomeSound(context)
             welcomeSound?.start()
             
+            // Message bienvenue simple
             val message = "Bienvenue dans Magic Control. Votre assistant vocal pour malvoyants."
             TTSManager.speak(context, message)
             
