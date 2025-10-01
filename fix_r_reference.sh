@@ -1,3 +1,8 @@
+#!/bin/bash
+echo "🔧 CORRECTION RÉFÉRENCE MANQUANTE 'R'"
+
+# Ajouter l'import manquant pour R
+cat > app/src/main/java/com/magiccontrol/utils/FirstLaunchWelcome.kt << 'WELCOME'
 package com.magiccontrol.utils
 
 import android.content.Context
@@ -38,3 +43,13 @@ object FirstLaunchWelcome {
         }
     }
 }
+WELCOME
+
+echo "✅ CORRECTION APPLIQUÉE :"
+echo "• Import com.magiccontrol.R AJOUTÉ"
+echo "• Référence R.string.welcome_message MAINTENANT VALIDE"
+
+echo ""
+echo "🔍 VÉRIFICATION :"
+grep -n "import.*R" app/src/main/java/com/magiccontrol/utils/FirstLaunchWelcome.kt
+grep -n "R.string.welcome_message" app/src/main/java/com/magiccontrol/utils/FirstLaunchWelcome.kt
