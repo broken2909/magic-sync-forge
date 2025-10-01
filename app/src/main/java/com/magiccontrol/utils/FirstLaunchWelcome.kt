@@ -3,38 +3,48 @@ package com.magiccontrol.utils
 import android.content.Context
 import android.util.Log
 import com.magiccontrol.tts.TTSManager
-import com.magiccontrol.R
 
 object FirstLaunchWelcome {
     private const val TAG = "FirstLaunchWelcome"
-
-    /**
-     * Joue le message de bienvenue uniquement au premier lancement
-     */
+    
     fun playWelcomeIfFirstLaunch(context: Context) {
-        // Vérifier si c'est le premier lancement
-        if (PreferencesManager.isFirstLaunch(context)) {
-            Log.d(TAG, "Premier lancement détecté")
+        val prefs = PreferencesManager.getPreferences(context)
+        val isFirstLaunch = prefs.getBoolean("first_launch", true)
+        
+        if (isFirstLaunch) {
+            Log.d(TAG, "Premier lancement - Message bienvenue unifié bilingue")
             
-            // Initialiser TTS avant de parler
-            TTSManager.initialize(context)
+            // Son welcome
+            val welcomeSound = loadWelcomeSound(context)
+            welcomeSound?.play()
             
-            // Message MULTILINGUE via ressources système
-            val message = context.getString(R.string.welcome_message)
-            
-            // Jouer le message
-            try {
-                TTSManager.speak(context, message)
-                Log.d(TAG, "Message vocal envoyé: '$message'")
-            } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors de l'envoi au TTS", e)
+            // MESSAGE BIENVENUE UNIFIÉ BILINGUE (structure originale + guidance)
+            val currentLanguage = PreferencesManager.getCurrentLanguage(context)
+            val unifiedMessage = if (currentLanguage == "fr") {
+                "Bienvenue dans votre assistant vocal Magic Control. Magic Control nécessite une activation manuelle dans les paramètres d'accessibilité pour contrôler votre appareil. Nous recommandons une assistance pour cette étape."
+            } else {
+                "Welcome to your voice assistant Magic Control. Magic Control requires manual activation in accessibility settings to control your device. We recommend assistance for this step."
             }
             
-            // Marquer le premier lancement comme terminé
-            PreferencesManager.setFirstLaunchComplete(context)
-            Log.d(TAG, "Premier lancement marqué comme terminé")
-        } else {
-            Log.d(TAG, "Ce n'est pas le premier lancement - message ignoré")
+            TTSManager.speak(context, unifiedMessage)
+            
+            // Marquer comme lancé (même structure que commit original)
+            prefs.edit().putBoolean("first_launch", false).apply()
+        }
+    }
+    
+    private fun loadWelcomeSound(context: Context): android.media.MediaPlayer? {
+        return try {
+            val soundResource = context.resources.getIdentifier("welcome_sound", "raw", context.packageName)
+            if (soundResource != 0) {
+                android.media.MediaPlayer.create(context, soundResource)
+            } else {
+                Log.w(TAG, "Son de bienvenue non trouvé")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur chargement son bienvenue", e)
+            null
         }
     }
 }
