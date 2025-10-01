@@ -116,3 +116,14 @@ object TTSManager {
         return tts?.isSpeaking ?: false
     }
 }
+            Log.d(TAG, "Anglais configuré comme fallback")
+        }
+        // ✅ 5. Sinon utiliser la langue par défaut du TTS
+        else {
+            Log.w(TAG, "Aucune langue disponible - utilisation défaut TTS")
+        }
+        
+        // Configurer la vitesse de parole
+        tts?.setSpeechRate(1.0f)
+    }
+}

@@ -1,23 +1,21 @@
 #!/bin/bash
-echo "🔍 DEBUG: POURQUOI TTS NE DÉTECTE PAS LA LANGUE"
+echo "🔍 DÉBUGAGE LANGUE TTS"
 
-# 1. Vérifier comment TTSManager configure la langue
-echo "=== CONFIGURATION LANGUE TTSManager ==="
-grep -A10 "setupTTS" app/src/main/java/com/magiccontrol/tts/TTSManager.kt
-
-# 2. Vérifier PreferencesManager.getCurrentLanguage()
 echo ""
-echo "=== DÉTECTION LANGUE PRÉFÉRENCES ==="
-grep -A5 "getCurrentLanguage" app/src/main/java/com/magiccontrol/utils/PreferencesManager.kt
+echo "📋 CONFIGURATION TTSManager :"
+grep -A 15 "setupTTSWithSystemLanguage" app/src/main/java/com/magiccontrol/tts/TTSManager.kt
 
-# 3. Vérifier la logique de détection
 echo ""
-echo "=== LOGIQUE DÉTECTION LANGUE ==="
-echo "TTSManager utilise: PreferencesManager.getCurrentLanguage(context)"
-echo "Mais getCurrentLanguage() retourne peut-être toujours 'fr' par défaut"
+echo "🌍 TRADUCTIONS DISPONIBLES :"
+find app/src/main/res -name "strings.xml" | head -5
 
-# 4. Solution: Utiliser la locale système directement
 echo ""
-echo "🎯 SOLUTION:"
-echo "Remplacer dans TTSManager:"
-echo "PreferencesManager.getCurrentLanguage(context) → Locale.getDefault().language"
+echo "🔧 PREMIER LANCEMENT CONFIG :"
+grep -A 5 -B 5 "isFirstLaunch\\|setFirstLaunchComplete" app/src/main/java/com/magiccontrol/utils/PreferencesManager.kt
+
+echo ""
+echo "💡 DIAGNOSTIC :"
+echo "Le TTS utilise la voix synthétisée car :"
+echo "1. Soit la langue système n'est pas correctement détectée"
+echo "2. Soit le TTS Android n'a pas la voix naturelle pour la langue"
+echo "3. Soit FirstLaunchWelcome ne s'exécute pas correctement"
