@@ -347,6 +347,10 @@ class FullRecognitionService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+    
+    // 🔧 REDÉMARRER ÉCOUTE PERMANENTE
+    val wakeIntent = Intent(this, WakeWordService::class.java)
+    startService(wakeIntent)
         Log.d(TAG, "🔚 Service reconnaissance arrêté")
         
         recognitionActive = false
