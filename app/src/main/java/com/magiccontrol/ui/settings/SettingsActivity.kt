@@ -1,6 +1,5 @@
-import android.os.Handler
 package com.magiccontrol.ui.settings
-
+import android.os.Handler
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
