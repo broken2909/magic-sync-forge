@@ -121,6 +121,7 @@ class WakeWordService : Service() {
     private fun onWakeWordDetected() {
         Log.d(TAG, "🎯 Traitement mot-clé détecté")
         TTSManager.speak(applicationContext, "Oui?")
+    wakeWordDetector?.stopListening()  // 🔧 ARRÊTER ÉCOUTE PENDANT TRAITEMENT
         // Lancer reconnaissance complète
         Handler(Looper.getMainLooper()).postDelayed({
             val intent = Intent(this, FullRecognitionService::class.java)
