@@ -1,0 +1,51 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Download Vosk Android AAR
+      run: |
+        mkdir -p app/libs
+        wget https://repo1.maven.org/maven2/com/alphacephei/vosk-android/0.3.32/vosk-android-0.3.32.aar -O app/libs/vosk-android.aar
+
+    - name: Grant execute permission
+      run: |
+        chmod +x gradlew
+        chmod +x build.sh
+
+    - name: Build debug APK
+      run: ./build.sh
+
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: magic-control-debug-apk
+        path: app/build/outputs/apk/debug/*.apk
+        retention-days: 30
