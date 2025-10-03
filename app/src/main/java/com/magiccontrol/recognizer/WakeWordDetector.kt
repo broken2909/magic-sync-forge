@@ -9,7 +9,6 @@ import android.os.Process
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.magiccontrol.utils.PreferencesManager
-import com.magiccontrol.utils.ModelManager
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.json.JSONObject
@@ -20,36 +19,40 @@ class WakeWordDetector(private val context: Context) {
     private var audioRecord: AudioRecord? = null
     private var isListening = false
     private val sampleRate = 16000
-    private val bufferSize = 1024
+    private val bufferSize = 8192
     private val TAG = "WakeWordDetector"
     
-    // VOSK Components
+    // Composants VOSK
     private var voskModel: Model? = null
     private var voskRecognizer: Recognizer? = null
+    private var modelInitialized = false
 
     var onWakeWordDetected: (() -> Unit)? = null
-
-    private fun hasMicrophonePermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED
-    }
+    private var audioThread: Thread? = null
 
     fun startListening(): Boolean {
-        if (isListening) return true
+        Log.d(TAG, "🎯 Démarrage détection VOSK")
+        
+        if (isListening) {
+            Log.d(TAG, "⚠️ Écoute déjà active")
+            return true
+        }
 
         if (!hasMicrophonePermission()) {
-            Log.w(TAG, "Permission microphone non accordée - Détection impossible")
+            Log.e(TAG, "❌ Permission microphone manquante")
             return false
         }
 
-        // Initialize VOSK model
-        if (!initializeVoskModel()) {
-            Log.e(TAG, "Erreur initialisation modèle VOSK")
+        // Initialiser VOSK si nécessaire
+        if (!modelInitialized && !initializeVoskModel()) {
+            Log.e(TAG, "❌ Échec initialisation VOSK")
             return false
         }
 
+        return startAudioRecording()
+    }
+    
+    private fun startAudioRecording(): Boolean {
         try {
             val minBufferSize = AudioRecord.getMinBufferSize(
                 sampleRate,
@@ -58,84 +61,111 @@ class WakeWordDetector(private val context: Context) {
             )
 
             if (minBufferSize == AudioRecord.ERROR || minBufferSize == AudioRecord.ERROR_BAD_VALUE) {
-                Log.e(TAG, "Configuration audio invalide")
+                Log.e(TAG, "❌ Configuration audio invalide")
                 return false
             }
+
+            val finalBufferSize = maxOf(minBufferSize * 2, bufferSize)
+            Log.d(TAG, "🎧 Buffer audio: $finalBufferSize")
 
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.VOICE_RECOGNITION,
                 sampleRate,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT,
-                minBufferSize.coerceAtLeast(bufferSize)
+                finalBufferSize
             )
 
             if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
-                Log.e(TAG, "AudioRecord non initialisé correctement")
-                audioRecord?.release()
-                audioRecord = null
+                Log.e(TAG, "❌ AudioRecord non initialisé")
                 return false
             }
 
             audioRecord?.startRecording()
+            
+            if (audioRecord?.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
+                Log.e(TAG, "❌ Enregistrement non démarré")
+                return false
+            }
+
             isListening = true
-
-            Thread {
-                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-                val buffer = ByteArray(bufferSize)
-
-                while (isListening) {
-                    val bytesRead = audioRecord?.read(buffer, 0, bufferSize) ?: 0
-                    if (bytesRead > 0) {
-                        processAudioWithVosk(buffer, bytesRead)
-                    }
-                    Thread.sleep(50)
-                }
-            }.start()
-
-            Log.d(TAG, "Détection VOSK démarrée avec succès")
+            startAudioProcessingThread(finalBufferSize)
+            
+            Log.d(TAG, "✅ Détection VOSK activée")
             return true
 
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur démarrage écoute", e)
-            stopListening()
+            Log.e(TAG, "❌ Erreur démarrage audio", e)
             return false
         }
+    }
+    
+    private fun startAudioProcessingThread(bufferSize: Int) {
+        audioThread = Thread {
+            Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
+            val buffer = ByteArray(bufferSize)
+            
+            Log.d(TAG, "🔊 Thread audio VOSK démarré")
+
+            try {
+                while (isListening && audioRecord != null) {
+                    try {
+                        val bytesRead = audioRecord?.read(buffer, 0, buffer.size) ?: 0
+                        
+                        if (bytesRead > 0) {
+                            processAudioWithVosk(buffer, bytesRead)
+                        } else if (bytesRead < 0) {
+                            Log.w(TAG, "⚠️ Erreur lecture audio: $bytesRead")
+                            break
+                        }
+                        
+                        Thread.sleep(10)
+                        
+                    } catch (e: Exception) {
+                        Log.e(TAG, "❌ Erreur traitement audio", e)
+                        break
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Erreur thread audio", e)
+            }
+            
+            Log.d(TAG, "🔇 Thread audio terminé")
+        }
+        
+        audioThread?.start()
     }
 
     private fun initializeVoskModel(): Boolean {
         try {
-            // Get current language from preferences
+            Log.d(TAG, "🔄 Initialisation modèle VOSK...")
+            
             val currentLanguage = PreferencesManager.getCurrentLanguage(context)
-            val modelPath = ModelManager.getModelPathForLanguage(context, currentLanguage)
+            Log.d(TAG, "🌐 Langue détection: $currentLanguage")
             
-            // Check if model is available
-            if (!ModelManager.isModelAvailable(context, currentLanguage)) {
-                Log.e(TAG, "Modèle VOSK non disponible pour langue: $currentLanguage")
-                return false
+            // Chemin du modèle
+            val modelPath = File(context.filesDir, "models/$currentLanguage-small").absolutePath
+            
+            if (!File(modelPath).exists()) {
+                Log.e(TAG, "❌ Modèle VOSK manquant: $modelPath")
+                // Fallback vers français
+                val fallbackPath = File(context.filesDir, "models/fr-small").absolutePath
+                if (!File(fallbackPath).exists()) {
+                    Log.e(TAG, "❌ Modèle fallback aussi manquant")
+                    return false
+                }
             }
             
-            // Get absolute model path
-            val absoluteModelPath = File(context.filesDir, "models/vosk-model-small-$currentLanguage-0.22").absolutePath
-            Log.d(TAG, "Chargement modèle VOSK: $absoluteModelPath")
-            
-            if (!File(absoluteModelPath).exists()) {
-                Log.e(TAG, "Chemin modèle VOSK inexistant: $absoluteModelPath")
-                return false
-            }
-            
-            // Initialize VOSK model and recognizer
-            voskModel = Model(absoluteModelPath)
+            // Initialiser VOSK
+            voskModel = Model(modelPath)
             voskRecognizer = Recognizer(voskModel, sampleRate.toFloat())
             
-            Log.d(TAG, "Modèle VOSK initialisé avec succès")
+            modelInitialized = true
+            Log.d(TAG, "✅ Modèle VOSK initialisé - Langue: $currentLanguage")
             return true
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur initialisation VOSK", e)
-            voskModel?.close()
-            voskModel = null
-            voskRecognizer = null
+            Log.e(TAG, "❌ Erreur initialisation VOSK", e)
             return false
         }
     }
@@ -146,89 +176,142 @@ class WakeWordDetector(private val context: Context) {
             
             if (recognizer.acceptWaveForm(buffer, bytesRead)) {
                 val result = recognizer.result
-                processVoskResult(result)
+                processVoskResult(result, false)
             } else {
                 val partialResult = recognizer.partialResult
-                processVoskPartial(partialResult)
+                if (partialResult.isNotEmpty()) {
+                    processVoskResult(partialResult, true)
+                }
             }
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur traitement audio VOSK", e)
+            Log.e(TAG, "❌ Erreur traitement VOSK", e)
         }
     }
     
-    private fun processVoskResult(result: String) {
+    private fun processVoskResult(result: String, isPartial: Boolean) {
         try {
+            if (result.isEmpty() || result == "{}") return
+            
             val json = JSONObject(result)
-            val text = json.optString("text", "").trim()
+            val text = if (isPartial) {
+                json.optString("partial", "").trim()
+            } else {
+                json.optString("text", "").trim()
+            }
             
             if (text.isNotEmpty()) {
-                Log.d(TAG, "VOSK résultat final: '$text'")
-                checkForWakeWord(text)
+                val logType = if (isPartial) "🔍 Partiel" else "🎯 Final"
+                Log.d(TAG, "$logType VOSK: '$text'")
+                
+                if (!isPartial || text.length > 2) {
+                    checkForWakeWord(text)
+                }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Erreur parsing résultat VOSK", e)
-        }
-    }
-    
-    private fun processVoskPartial(partialResult: String) {
-        try {
-            val json = JSONObject(partialResult)
-            val partial = json.optString("partial", "").trim()
             
-            if (partial.isNotEmpty()) {
-                Log.d(TAG, "VOSK partiel: '$partial'")
-                checkForWakeWord(partial)
-            }
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur parsing partiel VOSK", e)
+            Log.e(TAG, "❌ Erreur parsing VOSK", e)
         }
     }
     
     private fun checkForWakeWord(text: String) {
-        val keyword = PreferencesManager.getActivationKeyword(context).lowercase()
-        val normalizedText = text.lowercase()
-        
-        if (normalizedText.contains(keyword)) {
-            Log.d(TAG, "🎯 Mot d'activation VOSK détecté: '$keyword' dans '$text'")
-            onWakeWordDetected?.invoke()
+        try {
+            val keyword = PreferencesManager.getActivationKeyword(context).lowercase().trim()
+            val normalizedText = text.lowercase().trim()
+            
+            // Recherche flexible du mot-clé
+            val found = normalizedText.contains(keyword) ||
+                      normalizedText.split(" ").any { word -> 
+                          word == keyword || 
+                          calculateSimilarity(word, keyword) > 0.7
+                      }
+            
+            if (found) {
+                Log.d(TAG, "🎉🎉 MOT-CLÉ DÉTECTÉ: '$keyword' dans '$text' 🎉🎉")
+                
+                try {
+                    onWakeWordDetected?.invoke()
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Erreur callback détection", e)
+                }
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur vérification mot-clé", e)
         }
+    }
+    
+    private fun calculateSimilarity(s1: String, s2: String): Double {
+        if (s1 == s2) return 1.0
+        if (s1.isEmpty() || s2.isEmpty()) return 0.0
+        
+        val longer = if (s1.length > s2.length) s1 else s2
+        val shorter = if (s1.length > s2.length) s2 else s1
+        
+        return if (longer.length == 0) 1.0 
+        else (longer.length - editDistance(longer, shorter)) / longer.length.toDouble()
+    }
+    
+    private fun editDistance(s1: String, s2: String): Int {
+        val dp = Array(s1.length + 1) { IntArray(s2.length + 1) }
+        
+        for (i in 0..s1.length) dp[i][0] = i
+        for (j in 0..s2.length) dp[0][j] = j
+        
+        for (i in 1..s1.length) {
+            for (j in 1..s2.length) {
+                val cost = if (s1[i-1] == s2[j-1]) 0 else 1
+                dp[i][j] = minOf(
+                    dp[i-1][j] + 1,      // deletion
+                    dp[i][j-1] + 1,      // insertion  
+                    dp[i-1][j-1] + cost  // substitution
+                )
+            }
+        }
+        
+        return dp[s1.length][s2.length]
     }
 
     fun stopListening() {
+        Log.d(TAG, "🛑 Arrêt détection")
         isListening = false
+        
+        try {
+            audioThread?.interrupt()
+            audioThread = null
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur arrêt thread", e)
+        }
+        
         try {
             audioRecord?.stop()
             audioRecord?.release()
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur arrêt écoute", e)
+            Log.e(TAG, "❌ Erreur arrêt AudioRecord", e)
         }
         audioRecord = null
-        
-        // Cleanup VOSK resources
-        try {
-            voskRecognizer = null
-            voskModel?.close()
-            voskModel = null
-        } catch (e: Exception) {
-            Log.e(TAG, "Erreur nettoyage VOSK", e)
-        }
-        
-        Log.d(TAG, "Détection VOSK arrêtée")
     }
 
     fun isListening(): Boolean = isListening
 
-    fun isSystemFunctional(): Boolean {
-        return try {
-            val minBufferSize = AudioRecord.getMinBufferSize(
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT
-            )
-            minBufferSize > 0 && hasMicrophonePermission()
+    private fun hasMicrophonePermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    
+    fun cleanup() {
+        Log.d(TAG, "🧹 Nettoyage VOSK")
+        stopListening()
+        
+        try {
+            voskRecognizer = null
+            voskModel?.close()
+            voskModel = null
+            modelInitialized = false
         } catch (e: Exception) {
-            false
+            Log.e(TAG, "❌ Erreur cleanup VOSK", e)
         }
     }
 }
