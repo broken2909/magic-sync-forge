@@ -1,3 +1,4 @@
+import android.os.Handler
 package com.magiccontrol.ui.settings
 
 import android.content.Intent
