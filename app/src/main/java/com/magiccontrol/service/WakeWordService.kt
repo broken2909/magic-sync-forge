@@ -2,168 +2,89 @@ package com.magiccontrol.service
 
 import android.app.*
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
-import android.os.IBinder
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
-import com.magiccontrol.MainActivity
 import com.magiccontrol.recognizer.WakeWordDetector
 import com.magiccontrol.tts.TTSManager
-import com.magiccontrol.R
-import com.magiccontrol.utils.PreferencesManager
 
 class WakeWordService : Service() {
 
     private var wakeWordDetector: WakeWordDetector? = null
     private val TAG = "WakeWordService"
-    private val NOTIFICATION_ID = 1001
-    private val CHANNEL_ID = "MAGIC_CONTROL_CHANNEL"
     private var serviceStarted = false
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "🔄 WakeWordService onCreate()")
-        createNotificationChannel()
+        Log.d(TAG, "Service créé")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "🚀 Démarrage du service vocal")
+        Log.d(TAG, "Démarrage service")
         
-        if (serviceStarted) {
-            Log.d(TAG, "⚠️ Service déjà actif")
-            return START_STICKY
-        }
+        if (serviceStarted) return START_STICKY
 
         try {
             startForegroundService()
             initializeAudioDetector()
             serviceStarted = true
-            Log.d(TAG, "✅ Service vocal activé avec succès")
+            Log.d(TAG, "Service activé")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Erreur démarrage service", e)
-            TTSManager.speak(applicationContext, "Erreur démarrage service vocal")
+            Log.e(TAG, "Erreur démarrage", e)
             return START_NOT_STICKY
         }
 
         return START_STICKY
     }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Magic Control Voice Service",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Service de reconnaissance vocale Magic Control"
-                setShowBadge(false)
-                setSound(null, null)
-            }
-            
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(channel)
-        }
-    }
-
     private fun startForegroundService() {
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("🎤 Magic Control Actif")
-            .setContentText("Micro prêt - Dites 'Magic'")
+        val notification = NotificationCompat.Builder(this, "MAGIC_CONTROL")
+            .setContentTitle("Magic Control Actif")
+            .setContentText("Micro prêt")
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
-
-        startForeground(NOTIFICATION_ID, notification)
-        Log.d(TAG, "📱 Notification foreground activée")
+        startForeground(1001, notification)
     }
 
     private fun initializeAudioDetector() {
         try {
-            Log.d(TAG, "🎯 Initialisation du détecteur audio...")
-            
             wakeWordDetector = WakeWordDetector(applicationContext)
-            
             wakeWordDetector?.onWakeWordDetected = {
-                Log.d(TAG, "🎉 MOT-CLÉ DÉTECTÉ!")
                 onWakeWordDetected()
             }
-
-            // Délai avant démarrage de l'écoute
             Handler(Looper.getMainLooper()).postDelayed({
                 startListening()
             }, 1000L)
-            
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Erreur initialisation détecteur", e)
-            TTSManager.speak(applicationContext, "Erreur initialisation microphone")
+            Log.e(TAG, "Erreur détecteur", e)
         }
     }
 
     private fun startListening() {
         try {
-            val success = wakeWordDetector?.startListening() ?: false
-            
-            if (success) {
-                Log.d(TAG, "👂 Écoute audio ACTIVÉE")
-                TTSManager.speak(applicationContext, "Magic Control activé. Dites Magic pour commander.")
-            } else {
-                Log.e(TAG, "❌ Échec démarrage écoute")
-            }
+            wakeWordDetector?.startListening()
+            Log.d(TAG, "Écoute activée")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Erreur démarrage écoute", e)
+            Log.e(TAG, "Erreur écoute", e)
         }
     }
 
     private fun onWakeWordDetected() {
-    Log.d(TAG, "🎯 Traitement mot-clé détecté - Transition vers reconnaissance")
-    
-    try {
-        // 1. Feedback vocal immédiat
+        Log.d(TAG, "Mot-clé détecté")
         TTSManager.speak(applicationContext, "Oui?")
-        
-        // 2. Démarrer reconnaissance complète IMMÉDIATEMENT
-        val intent = Intent(this, FullRecognitionService::class.java)
-        startService(intent)
-        Log.d(TAG, "🚀 FullRecognitionService démarré")
-        
-        // 3. Arrêter écoute actuelle APRÈS démarrage nouveau service
         Handler(Looper.getMainLooper()).postDelayed({
-            Log.d(TAG, "🔄 Arrêt écoute wake word")
-            wakeWordDetector?.stopListening()
+            val intent = Intent(this, FullRecognitionService::class.java)
+            startService(intent)
         }, 500L)
-        
-    } catch (e: Exception) {
-        Log.e(TAG, "❌ Erreur transition services", e)
-    }
-} catch (e: Exception) {
-            Log.e(TAG, "❌ Erreur traitement mot-clé", e)
-        }
-    }
-
-    private fun hasMicrophonePermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            android.Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "🛑 Arrêt du service vocal")
-        
-        try {
-            wakeWordDetector?.stopListening()
-            wakeWordDetector = null
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Erreur nettoyage détecteur", e)
-        }
-        
+        Log.d(TAG, "Service arrêté")
+        wakeWordDetector?.stopListening()
         serviceStarted = false
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+}
