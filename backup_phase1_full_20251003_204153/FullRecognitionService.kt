@@ -345,52 +345,17 @@ class FullRecognitionService : Service() {
         }
     }
 
-    
-    
-    // 🔧 REDÉMARRAGE SERVICE WAKE WORD
-    private fun restartWakeWordService() {
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "🔚 Service reconnaissance arrêté")
+        
+        recognitionActive = false
+        isListening = false
+        
         try {
-            Log.d(TAG, "🔄 Redémarrage service wake word")
-            val wakeIntent = Intent(this, WakeWordService::class.java)
-            startService(wakeIntent)
+            recognitionThread?.interrupt()
+            recognitionThread = null
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Erreur redémarrage wake word", e)
-        }
-    }override fun onDestroy() {
-    super.onDestroy()
-    Log.d(TAG, "🔚 Service reconnaissance arrêté")
-
-    recognitionActive = false
-    isListening = false
-
-    try {
-        recognitionThread?.interrupt()
-        recognitionThread = null
-    } catch (e: Exception) {
-        Log.e(TAG, "❌ Erreur arrêt thread", e)
-    }
-    
-    try {
-        audioRecord?.stop()
-        audioRecord?.release()
-        audioRecord = null
-    } catch (e: Exception) {
-        Log.e(TAG, "❌ Erreur arrêt audio", e)
-    }
-    
-    try {
-        voskRecognizer = null
-        voskModel?.close()
-        voskModel = null
-    } catch (e: Exception) {
-        Log.e(TAG, "❌ Erreur cleanup VOSK", e)
-    }
-    
-    // 🔧 REDÉMARRAGE SERVICE WAKE WORD APRÈS NETTOYAGE
-    Handler(Looper.getMainLooper()).postDelayed({
-        restartWakeWordService()
-    }, 1000L)
-} catch (e: Exception) {
             Log.e(TAG, "❌ Erreur arrêt thread", e)
         }
         

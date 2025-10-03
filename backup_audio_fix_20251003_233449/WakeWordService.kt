@@ -143,31 +143,15 @@ class WakeWordService : Service() {
             startListening()
         }, 2000L)
     }
-}, 500L)
-        
-    } catch (e: Exception) {
-        Log.e(TAG, "❌ Erreur transition services", e)
-        // Redémarrer l'écoute en cas d'erreur
-        Handler(Looper.getMainLooper()).postDelayed({
-            startListening()
-        }, 2000L)
-    }
-}, 500L)
-        
-    } catch (e: Exception) {
-        Log.e(TAG, "❌ Erreur transition services", e)
-        // Redémarrer l'écoute en cas d'erreur
-        Handler(Looper.getMainLooper()).postDelayed({
-            startListening()
-        }, 2000L)
-    }
 }, 1000L)
+    }
     
     private fun hasMicrophonePermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
             android.Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -178,5 +162,8 @@ class WakeWordService : Service() {
             wakeWordDetector = null
         } catch (e: Exception) {
             Log.e(TAG, "❌ Erreur cleanup", e)
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
+}
