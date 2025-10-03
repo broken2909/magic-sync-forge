@@ -120,27 +120,23 @@ class WakeWordService : Service() {
     }
 
     private fun onWakeWordDetected() {
-    Log.d(TAG, "🎯 Traitement mot-clé détecté - Transition vers reconnaissance")
-    
-    try {
-        // 1. Feedback vocal immédiat
-        TTSManager.speak(applicationContext, "Oui?")
+        Log.d(TAG, "🎯 Traitement du mot-clé détecté")
         
-        // 2. Démarrer reconnaissance complète IMMÉDIATEMENT
-        val intent = Intent(this, FullRecognitionService::class.java)
-        startService(intent)
-        Log.d(TAG, "🚀 FullRecognitionService démarré")
-        
-        // 3. Arrêter écoute actuelle APRÈS démarrage nouveau service
-        Handler(Looper.getMainLooper()).postDelayed({
-            Log.d(TAG, "🔄 Arrêt écoute wake word")
+        try {
+            // 1. Feedback vocal immédiat
+            TTSManager.speak(applicationContext, "Oui?")
+            
+            // 2. Arrêt de l'écoute actuelle
             wakeWordDetector?.stopListening()
-        }, 500L)
-        
-    } catch (e: Exception) {
-        Log.e(TAG, "❌ Erreur transition services", e)
-    }
-} catch (e: Exception) {
+            
+            // 3. Lancement du service de reconnaissance complète
+            Handler(Looper.getMainLooper()).postDelayed({
+                val intent = Intent(this, FullRecognitionService::class.java)
+                startService(intent)
+                Log.d(TAG, "🚀 FullRecognitionService démarré")
+            }, 1000L)
+            
+        } catch (e: Exception) {
             Log.e(TAG, "❌ Erreur traitement mot-clé", e)
         }
     }
@@ -167,3 +163,4 @@ class WakeWordService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+}
