@@ -1,0 +1,23 @@
+📋 DOCUMENT RÉFÉRENCE - ÉTAT ACTUEL
+==========================================
+
+🚨 PROBLÈMES CONNUS :
+- FullRecognitionService ligne 50: Constructeur Vosk incorrect
+- Modèles assets nécessitent constructeur spécial
+- MainActivity: Gestion permissions OK
+- WakeWordDetector: Gestion permissions OK
+
+✅ FONCTIONNEL :
+- Interface graphique
+- Layout Z.ai complet
+- Permissions microphone
+- Mode simulation reconnaissance
+
+🔧 CORRECTIONS APPLIQUÉES :
+- MainActivity: Demande permission + séquence TTS→Toast→Permission→Services
+- WakeWordDetector: Vérification permission avant AudioRecord
+
+🎯 PROCHAINES ACTIONS :
+- Trouver constructeur Vosk correct pour modèles assets
+- Ou basculer sur modèles téléchargés seulement
+
