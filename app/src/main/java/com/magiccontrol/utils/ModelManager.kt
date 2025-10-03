@@ -11,8 +11,8 @@ object ModelManager {
     
     // Modèles intégrés (small)
     private val BUILTIN_MODELS = mapOf(
-        "fr-small" to "models/vosk-model-small-fr",
-        "en-small" to "models/vosk-model-small-en-us"
+        "fr-small" to "models/vosk-model-small-fr-0.22",
+        "en-small" to "models/vosk-model-small-en-us-0.22"
     )
     
     // Modèles téléchargeables (large)

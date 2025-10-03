@@ -116,7 +116,7 @@ class WakeWordDetector(private val context: Context) {
             }
             
             // Get absolute model path
-            val absoluteModelPath = File(context.filesDir, "models/$currentLanguage-small").absolutePath
+            val absoluteModelPath = File(context.filesDir, "models/vosk-model-small-$currentLanguage-0.22").absolutePath
             Log.d(TAG, "Chargement modèle VOSK: $absoluteModelPath")
             
             if (!File(absoluteModelPath).exists()) {
