@@ -1,3 +1,13 @@
+#!/bin/bash
+cd /data/data/com.termux/files/home/magic-sync-forge
+
+echo "🔧 Reconstruction complète du fichier WakeWordService.kt..."
+
+# Sauvegarde
+cp app/src/main/java/com/magiccontrol/service/WakeWordService.kt app/src/main/java/com/magiccontrol/service/WakeWordService.kt.final_backup
+
+# Reconstruction du fichier avec une structure valide
+cat > app/src/main/java/com/magiccontrol/service/WakeWordService.kt << 'KOTLIN'
 package com.magiccontrol.service
 
 import android.app.*
@@ -280,3 +290,67 @@ class WakeWordService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 }
+KOTLIN
+
+echo "✅ Fichier WakeWordService.kt reconstruit"
+
+# Vérifications finales
+echo ""
+echo "🔍 VÉRIFICATIONS FINALES"
+echo "========================"
+
+# Vérification 1: Braces équilibrées
+echo "📋 Vérification braces équilibrées..."
+open_braces=$(grep -o "{" app/src/main/java/com/magiccontrol/service/WakeWordService.kt | wc -l)
+close_braces=$(grep -o "}" app/src/main/java/com/magiccontrol/service/WakeWordService.kt | wc -l)
+
+if [ "$open_braces" -eq "$close_braces" ]; then
+    echo "✅ Braces équilibrées: $open_braces/{ $close_braces/}"
+else
+    echo "❌ Braces déséquilibrées: $open_braces/{ $close_braces/}"
+    exit 1
+fi
+
+# Vérification 2: Structure Kotlin
+echo "📋 Vérification structure Kotlin..."
+if grep -q "class WakeWordService" app/src/main/java/com/magiccontrol/service/WakeWordService.kt && \
+   grep -q "override fun onBind" app/src/main/java/com/magiccontrol/service/WakeWordService.kt && \
+   grep -q "private val TAG" app/src/main/java/com/magiccontrol/service/WakeWordService.kt; then
+    echo "✅ Structure Kotlin valide"
+else
+    echo "❌ Structure Kotlin problématique"
+    exit 1
+fi
+
+# Vérification 3: Pas de fonctions sans nom
+echo "📋 Vérification fonctions sans nom..."
+if grep -q "fun ()" app/src/main/java/com/magiccontrol/service/WakeWordService.kt || \
+   grep -q "fun ()" app/src/main/java/com/magiccontrol/service/WakeWordService.kt; then
+    echo "❌ Fonctions sans nom détectées"
+    exit 1
+else
+    echo "✅ Toutes les fonctions ont un nom"
+fi
+
+# Vérification 4: Références résolues
+echo "📋 Vérification références..."
+if grep -q "TTSManager.speak" app/src/main/java/com/magiccontrol/service/WakeWordService.kt && \
+   grep -q "WakeWordDetector" app/src/main/java/com/magiccontrol/service/WakeWordService.kt && \
+   grep -q "FullRecognitionService" app/src/main/java/com/magiccontrol/service/WakeWordService.kt; then
+    echo "✅ Références importantes présentes"
+else
+    echo "❌ Références manquantes"
+    exit 1
+fi
+
+# Vérification 5: Encodage
+echo "📋 Vérification encodage..."
+if file -i app/src/main/java/com/magiccontrol/service/WakeWordService.kt | grep -q "utf-8"; then
+    echo "✅ Encodage UTF-8 correct"
+else
+    echo "❌ Problème d'encodage"
+    exit 1
+fi
+
+echo ""
+echo "🎉 RECONSTRUCTION TERMINÉE AVEC SUCCÈS !"
