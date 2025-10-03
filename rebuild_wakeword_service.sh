@@ -1,3 +1,17 @@
+#!/bin/bash
+cd /data/data/com.termux/files/home/magic-sync-forge
+
+echo "🎯 Début de la reconstruction méthodique..."
+
+# Sauvegarde du fichier actuel
+backup_dir="backup_reconstruction_$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$backup_dir"
+cp app/src/main/java/com/magiccontrol/service/WakeWordService.kt "$backup_dir/"
+
+echo "📋 Création du nouveau fichier avec structure validée..."
+
+# Reconstruction complète du fichier
+cat > app/src/main/java/com/magiccontrol/service/WakeWordService.kt << 'KOTLIN'
 package com.magiccontrol.service
 
 import android.app.*
@@ -164,3 +178,58 @@ class WakeWordService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 }
+KOTLIN
+
+echo "✅ Nouveau fichier créé"
+
+# Vérifications immédiates
+echo ""
+echo "🔍 VÉRIFICATIONS IMMÉDIATES"
+echo "==========================="
+
+# Vérification 1: Braces équilibrées
+echo "📋 Vérification des braces..."
+open_braces=$(grep -o "{" app/src/main/java/com/magiccontrol/service/WakeWordService.kt | wc -l)
+close_braces=$(grep -o "}" app/src/main/java/com/magiccontrol/service/WakeWordService.kt | wc -l)
+
+if [ "$open_braces" -eq "$close_braces" ]; then
+    echo "✅ Braces équilibrées: $open_braces/{ $close_braces/}"
+else
+    echo "❌ Braces déséquilibrées: $open_braces/{ $close_braces/}"
+    exit 1
+fi
+
+# Vérification 2: Structure Kotlin de base
+echo "📋 Vérification structure Kotlin..."
+if grep -q "class WakeWordService" app/src/main/java/com/magiccontrol/service/WakeWordService.kt && \
+   grep -q "override fun onBind" app/src/main/java/com/magiccontrol/service/WakeWordService.kt && \
+   grep -q "private val TAG" app/src/main/java/com/magiccontrol/service/WakeWordService.kt; then
+    echo "✅ Structure Kotlin valide"
+else
+    echo "❌ Structure Kotlin problématique"
+    exit 1
+fi
+
+# Vérification 3: Encodage UTF-8
+echo "📋 Vérification encodage..."
+if file -i app/src/main/java/com/magiccontrol/service/WakeWordService.kt | grep -q "utf-8"; then
+    echo "✅ Encodage UTF-8 correct"
+else
+    echo "❌ Problème d'encodage"
+    exit 1
+fi
+
+# Vérification 4: Syntaxe Kotlin basique
+echo "📋 Vérification syntaxe Kotlin..."
+if ! grep -q "fun ()" app/src/main/java/com/magiccontrol/service/WakeWordService.kt && \
+   ! grep -q "override fun ()" app/src/main/java/com/magiccontrol/service/WakeWordService.kt; then
+    echo "✅ Aucune fonction sans nom détectée"
+else
+    echo "❌ Fonctions sans nom détectées"
+    exit 1
+fi
+
+echo ""
+echo "🎉 RECONSTRUCTION TERMINÉE AVEC SUCCÈS !"
+echo "📍 Sauvegarde dans: $backup_dir"
+
