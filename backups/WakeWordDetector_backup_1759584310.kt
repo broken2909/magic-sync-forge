@@ -232,19 +232,10 @@ class WakeWordDetector(private val context: Context) {
             val normalizedText = text.lowercase().trim()
 
             // Recherche flexible du mot-clé
-            // Liste explicite des mots-clés acceptés
-            val keywordVariants = if (keyword == "magic") listOf(
-                "magic", "maagic", "magique", "maagique",
-                "magik", "maagik", "majic", "maggic"
-            ) else listOf(keyword)
-            
-            // Recherche stricte dans la liste
-            val found = keywordVariants.any { variant ->
-                normalizedText.contains(variant) || 
-                normalizedText.split(" ").any { word ->
-                    word == variant || calculateSimilarity(word, variant) > 0.85
-                }
-            }
+            val found = normalizedText.contains(keyword) ||
+                      normalizedText.split(" ").any { word ->
+                          word == keyword || calculateSimilarity(word, keyword) > 0.7
+                      }
 
             if (found) {
                 Log.d(TAG, "🎉🎉 MOT-CLÉ DÉTECTÉ: '$keyword' dans '$text' 🎉🎉")
