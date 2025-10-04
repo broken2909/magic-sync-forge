@@ -72,48 +72,32 @@ class ApplicationManager(private val context: Context) {
      * Ouvre une application par son nom
      */
     fun openApp(appName: String): Boolean {
-        Log.d(TAG, "📱 Tentative ouverture: $appName")
-        
-        // Mapping des apps courantes vers leurs intents
-        val appIntents = mapOf(
-            "appareil photo" to Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE),
-            "caméra" to Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE),
-            "galerie" to Intent(Intent.ACTION_VIEW, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
-            "photos" to Intent(Intent.ACTION_VIEW, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
-            "navigateur" to Intent(Intent.ACTION_VIEW, Uri.parse("https://google.com")),
-            "internet" to Intent(Intent.ACTION_VIEW, Uri.parse("https://google.com")),
-            "chrome" to Intent(Intent.ACTION_VIEW, Uri.parse("https://google.com")),
-            "paramètres" to Intent(android.provider.Settings.ACTION_SETTINGS),
-            "settings" to Intent(android.provider.Settings.ACTION_SETTINGS),
-            "musique" to Intent(Intent.ACTION_VIEW, Uri.parse("content://media/external/audio/media")),
-            "spotify" to Intent(Intent.ACTION_VIEW, Uri.parse("spotify:")),
-            "messages" to Intent(Intent.ACTION_VIEW, Uri.parse("sms:")),
-            "sms" to Intent(Intent.ACTION_VIEW, Uri.parse("sms:")),
-            "contacts" to Intent(Intent.ACTION_VIEW, ContactsContract.Contacts.CONTENT_URI),
-            "téléphone" to Intent(Intent.ACTION_DIAL),
-            "appel" to Intent(Intent.ACTION_DIAL)
-        )
-        
-        // Recherche dans le mapping
         val normalizedName = appName.lowercase()
-        for ((key, intent) in appIntents) {
-            if (normalizedName.contains(key)) {
-                Log.d(TAG, "✅ Intent trouvé: $key")
-                return launchIntent(intent)
-            }
-        }
-        
-        // Fallback: recherche dans les apps installées
-        Log.d(TAG, "🔍 Recherche dans apps installées: $appName")
         val installedApps = getInstalledApps()
+        
+        Log.d(TAG, "🎯 Recherche application: '$normalizedName'")
+        
+        // 1. Recherche exacte dans les apps installées
         for ((name, packageName) in installedApps) {
             if (name.contains(normalizedName) || normalizedName.contains(name)) {
-                Log.d(TAG, "✅ App trouvée: $name -> $packageName")
+                Log.d(TAG, "✅ Application trouvée: $name -> $packageName")
                 return launchApp(packageName)
             }
         }
         
-        Log.w(TAG, "❌ App non trouvée: $appName")
+        // 2. Recherche dans les apps système
+        for ((systemName, packages) in systemApps) {
+            if (normalizedName.contains(systemName) || systemName.contains(normalizedName)) {
+                Log.d(TAG, "🔧 Application système: $systemName")
+                for (packageName in packages) {
+                    if (launchApp(packageName)) {
+                        return true
+                    }
+                }
+            }
+        }
+        
+        Log.w(TAG, "❌ Application non trouvée: $appName")
         return false
     }
     

@@ -21,7 +21,7 @@ class ConversationManager(private val context: Context) {
     // États de conversation
     enum class ConversationState {
         LISTENING_WAKE_WORD,    // Écoute "Magic"
-        ACTIVE_CONVERSATION,      // Écoute commande utilisateur
+        LISTENING_COMMAND,      // Écoute commande utilisateur
         SPEAKING,               // Assistant parle (ignore audio)
         PROCESSING_COMMAND      // Exécution commande en cours
     }
@@ -32,16 +32,10 @@ class ConversationManager(private val context: Context) {
     private var voskInitialized = false
     
     // Gestion conversation
-    private var currentState = ConversationState.ACTIVE_CONVERSATION
+    private var currentState = ConversationState.LISTENING_WAKE_WORD
     private var commandProcessor: AdvancedCommandProcessor? = null
     private var lastWakeWordTime = 0L
-    private var lastCommandTime = 0L
-    private val CONVERSATION_TIMEOUT = 30000L // 30 secondes
     private val WAKE_WORD_COOLDOWN = 3000L // 3 secondes
-    
-    // Mots-clés de fin de conversation naturelle
-    private val endConversationKeywords = listOf(
-        "merci", "cest
     
     // Configuration audio
     private val sampleRate = 16000
@@ -138,7 +132,7 @@ class ConversationManager(private val context: Context) {
                         }
                     }
                     
-                    ConversationState.ACTIVE_CONVERSATION -> {
+                    ConversationState.LISTENING_COMMAND -> {
                         if (isFinal && text.isNotEmpty()) {
                             onCommandDetected(text)
                         }
@@ -175,7 +169,7 @@ class ConversationManager(private val context: Context) {
         return keywordVariants.any { variant ->
             normalizedText.contains(variant) || 
             normalizedText.split(" ").any { word ->
-                word == variant || calculateSimilarity(word, variant) > 0.75
+                word == variant || calculateSimilarity(word, variant) > 0.85
             }
         }
     }
@@ -201,7 +195,7 @@ class ConversationManager(private val context: Context) {
         
         // Transition vers écoute commande après délai TTS
         android.os.Handler(context.mainLooper).postDelayed({
-            currentState = ConversationState.ACTIVE_CONVERSATION
+            currentState = ConversationState.LISTENING_COMMAND
             Log.d(TAG, "🔊 En écoute pour commande...")
         }, 1500L)
     }
@@ -211,13 +205,10 @@ class ConversationManager(private val context: Context) {
      */
     private fun onCommandDetected(command: String) {
         Log.d(TAG, "🎯 COMMANDE DÉTECTÉE: '$command'")
-        
-        // Mise à jour timer conversation
-        lastCommandTime = System.currentTimeMillis()
         currentState = ConversationState.PROCESSING_COMMAND
         
         // Exécuter la commande
-        commandProcessor?.processNaturalCommand(command) { success ->
+        commandProcessor?.processCommand(command) { success ->
             if (success) {
                 Log.d(TAG, "✅ Commande exécutée avec succès")
             } else {
@@ -227,7 +218,7 @@ class ConversationManager(private val context: Context) {
             
             // Retour à l'écoute du mot-clé
             android.os.Handler(context.mainLooper).postDelayed({
-                currentState = ConversationState.ACTIVE_CONVERSATION
+                currentState = ConversationState.LISTENING_WAKE_WORD
                 Log.d(TAG, "🔍 Retour écoute mot-clé")
             }, 1000L)
         }
@@ -271,7 +262,7 @@ class ConversationManager(private val context: Context) {
      * Force l'arrêt de la conversation (quitter l'application)
      */
     fun stop() {
-        currentState = ConversationState.ACTIVE_CONVERSATION
+        currentState = ConversationState.LISTENING_WAKE_WORD
         commandProcessor = null
         
         try {
