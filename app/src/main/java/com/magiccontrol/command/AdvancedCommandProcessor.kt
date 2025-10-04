@@ -309,7 +309,7 @@ class AdvancedCommandProcessor(private val context: Context) {
         }
         
         if (appManager.openApp(appName)) {
-            TTSManager.speak(context, "Ouverture de $appType")
+            TTSManager.speak(context, "Ouverture de " + appName)
         } else {
             val suggestions = appManager.getAppSuggestions(appName)
             if (suggestions.isNotEmpty()) {
