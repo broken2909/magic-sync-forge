@@ -247,8 +247,8 @@ class AdvancedCommandProcessor(private val context: Context) {
      */
     private fun matchesPattern(command: String, pattern: String): Boolean {
         val regexPattern = pattern
-            .replace(".*", ".*?")  # CORRIGÉ: .*? pour matching non-greedy
-            .replace(" ", ".*?")   # CORRIGÉ: .*? entre les mots
+            .replace(".*", ".*?")  // CORRIGÉ: .*? pour matching non-greedy
+            .replace(" ", ".*?")   // CORRIGÉ: .*? entre les mots
         
         return command.matches(Regex(regexPattern))
     }
@@ -309,7 +309,7 @@ class AdvancedCommandProcessor(private val context: Context) {
         }
         
         if (appManager.openApp(appName)) {
-            TTSManager.speak(context, "Ouverture de $appName")
+            TTSManager.speak(context, "Ouverture de $appType")
         } else {
             val suggestions = appManager.getAppSuggestions(appName)
             if (suggestions.isNotEmpty()) {
@@ -327,7 +327,7 @@ class AdvancedCommandProcessor(private val context: Context) {
         Log.d(TAG, "📱 Ouverture application specifique: $appType")
         
         if (appManager.openApp(appType)) {
-            TTSManager.speak(context, "Ouverture de $appName")
+            TTSManager.speak(context, "Ouverture de $appType")
         } else {
             TTSManager.speak(context, "Impossible d'ouvrir $appType")
         }
