@@ -208,7 +208,7 @@ class ConversationManager(private val context: Context) {
         currentState = ConversationState.PROCESSING_COMMAND
         
         // Exécuter la commande
-        commandProcessor?.processCommand(command) { success ->
+        commandProcessor?.processNaturalCommand(command) { success ->
             if (success) {
                 Log.d(TAG, "✅ Commande exécutée avec succès")
             } else {
