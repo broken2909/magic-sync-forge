@@ -16,74 +16,185 @@ class AdvancedCommandProcessor(private val context: Context) {
     private val TAG = "AdvancedCommandProcessor"
     private val appManager = ApplicationManager(context)
     
-    // Dictionnaire de commandes avec variantes
-    private val commandPatterns = mapOf(
+    // Interface pour les actions de commande
+    private interface CommandAction {
+        fun execute(command: String = "")
+    }
+    
+    // Dictionnaire de commandes avec variantes - CORRIGÉ avec types explicites
+    private val commandPatterns = mapOf<String, CommandAction>(
         // VOLUME
-        "volume.*augmenter" to { changeVolume(1) },
-        "volume.*baisser" to { changeVolume(-1) },
-        "volume.*max" to { setVolume(100) },
-        "volume.*mute" to { setVolume(0) },
-        "volume.*moyen" to { setVolume(50) },
+        "volume.*augmenter" to object : CommandAction {
+            override fun execute(command: String) = changeVolume(1)
+        },
+        "volume.*baisser" to object : CommandAction {
+            override fun execute(command: String) = changeVolume(-1)
+        },
+        "volume.*max" to object : CommandAction {
+            override fun execute(command: String) = setVolume(100)
+        },
+        "volume.*mute" to object : CommandAction {
+            override fun execute(command: String) = setVolume(0)
+        },
+        "volume.*moyen" to object : CommandAction {
+            override fun execute(command: String) = setVolume(50)
+        },
         
         // APPLICATIONS DYNAMIQUES
-        "ouvrir.*" to { command -> openAnyApp(command) },
-        "lancer.*" to { command -> openAnyApp(command) },
-        "ouvre.*" to { command -> openAnyApp(command) },
+        "ouvrir.*" to object : CommandAction {
+            override fun execute(command: String) = openAnyApp(command)
+        },
+        "lancer.*" to object : CommandAction {
+            override fun execute(command: String) = openAnyApp(command)
+        },
+        "ouvre.*" to object : CommandAction {
+            override fun execute(command: String) = openAnyApp(command)
+        },
         
-        // APPLICATIONS SPÉCIFIQUES
-        "appareil.*photo" to { openSpecificApp("appareil photo") },
-        "caméra" to { openSpecificApp("appareil photo") },
-        "galerie" to { openSpecificApp("galerie") },
-        "photos" to { openSpecificApp("galerie") },
-        "navigateur" to { openSpecificApp("navigateur") },
-        "internet" to { openSpecificApp("navigateur") },
-        "chrome" to { openSpecificApp("navigateur") },
-        "paramètres" to { openSpecificApp("paramètres") },
-        "settings" to { openSpecificApp("paramètres") },
-        "musique" to { openSpecificApp("musique") },
-        "spotify" to { openSpecificApp("musique") },
-        "messages" to { openSpecificApp("messages") },
-        "sms" to { openSpecificApp("messages") },
-        "contacts" to { openSpecificApp("contacts") },
-        "téléphone" to { openSpecificApp("téléphone") },
-        "appel" to { openSpecificApp("téléphone") },
+        // APPLICATIONS SPECIFIQUES
+        "appareil.*photo" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("appareil photo")
+        },
+        "camera" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("appareil photo")
+        },
+        "galerie" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("galerie")
+        },
+        "photos" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("galerie")
+        },
+        "navigateur" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("navigateur")
+        },
+        "internet" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("navigateur")
+        },
+        "chrome" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("navigateur")
+        },
+        "parametres" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("parametres")
+        },
+        "settings" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("parametres")
+        },
+        "musique" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("musique")
+        },
+        "spotify" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("musique")
+        },
+        "messages" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("messages")
+        },
+        "sms" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("messages")
+        },
+        "contacts" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("contacts")
+        },
+        "telephone" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("telephone")
+        },
+        "appel" to object : CommandAction {
+            override fun execute(command: String) = openSpecificApp("telephone")
+        },
         
         // CONTRÔLE MUSIQUE
-        "musique.*jouer" to { controlMusic("play") },
-        "musique.*pause" to { controlMusic("pause") },
-        "musique.*stop" to { controlMusic("stop") },
-        "musique.*suivant" to { controlMusic("next") },
-        "musique.*précédent" to { controlMusic("previous") },
-        "musique.*suivante" to { controlMusic("next") },
-        "pause.*musique" to { controlMusic("pause") },
-        "stop.*musique" to { controlMusic("stop") },
-        "suivant.*musique" to { controlMusic("next") },
-        "précédent.*musique" to { controlMusic("previous") },
-        "play.*musique" to { controlMusic("play") },
-        "next.*musique" to { controlMusic("next") },
-        "previous.*musique" to { controlMusic("previous") },
+        "musique.*jouer" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("play")
+        },
+        "musique.*pause" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("pause")
+        },
+        "musique.*stop" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("stop")
+        },
+        "musique.*suivant" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("next")
+        },
+        "musique.*precedent" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("previous")
+        },
+        "musique.*suivante" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("next")
+        },
+        "pause.*musique" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("pause")
+        },
+        "stop.*musique" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("stop")
+        },
+        "suivant.*musique" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("next")
+        },
+        "precedent.*musique" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("previous")
+        },
+        "play.*musique" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("play")
+        },
+        "next.*musique" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("next")
+        },
+        "previous.*musique" to object : CommandAction {
+            override fun execute(command: String) = controlMusic("previous")
+        },
         
         // SYSTÈME
-        "retour.*accueil" to { goHome() },
-        "retour.*maison" to { goHome() },
-        "page.*précédente" to { goBack() },
-        "revenir.*en.*arrière" to { goBack() },
-        "éteindre.*écran" to { lockScreen() },
-        "verrouiller.*écran" to { lockScreen() },
+        "retour.*accueil" to object : CommandAction {
+            override fun execute(command: String) = goHome()
+        },
+        "retour.*maison" to object : CommandAction {
+            override fun execute(command: String) = goHome()
+        },
+        "page.*precedente" to object : CommandAction {
+            override fun execute(command: String) = goBack()
+        },
+        "revenir.*en.*arriere" to object : CommandAction {
+            override fun execute(command: String) = goBack()
+        },
+        "eteindre.*ecran" to object : CommandAction {
+            override fun execute(command: String) = lockScreen()
+        },
+        "verrouiller.*ecran" to object : CommandAction {
+            override fun execute(command: String) = lockScreen()
+        },
         
-        // CONNECTIVITÉ
-        "activer.*wifi" to { toggleWifi(true) },
-        "désactiver.*wifi" to { toggleWifi(false) },
-        "activer.*bluetooth" to { toggleBluetooth(true) },
-        "désactiver.*bluetooth" to { toggleBluetooth(false) },
-        "activer.*données" to { toggleMobileData(true) },
-        "désactiver.*données" to { toggleMobileData(false) },
+        // CONNECTIVITE
+        "activer.*wifi" to object : CommandAction {
+            override fun execute(command: String) = toggleWifi(true)
+        },
+        "desactiver.*wifi" to object : CommandAction {
+            override fun execute(command: String) = toggleWifi(false)
+        },
+        "activer.*bluetooth" to object : CommandAction {
+            override fun execute(command: String) = toggleBluetooth(true)
+        },
+        "desactiver.*bluetooth" to object : CommandAction {
+            override fun execute(command: String) = toggleBluetooth(false)
+        },
+        "activer.*donnees" to object : CommandAction {
+            override fun execute(command: String) = toggleMobileData(true)
+        },
+        "desactiver.*donnees" to object : CommandAction {
+            override fun execute(command: String) = toggleMobileData(false)
+        },
         
         // ASSISTANT
-        "que.*peux.*tu.*faire" to { showCapabilities() },
-        "aide" to { showHelp() },
-        "commandes.*disponibles" to { showCapabilities() },
-        "applications.*disponibles" to { showInstalledApps() }
+        "que.*peux.*tu.*faire" to object : CommandAction {
+            override fun execute(command: String) = showCapabilities()
+        },
+        "aide" to object : CommandAction {
+            override fun execute(command: String) = showHelp()
+        },
+        "commandes.*disponibles" to object : CommandAction {
+            override fun execute(command: String) = showCapabilities()
+        },
+        "applications.*disponibles" to object : CommandAction {
+            override fun execute(command: String) = showInstalledApps()
+        }
     )
     
     // Mots-clés d'urgence
@@ -113,17 +224,12 @@ class AdvancedCommandProcessor(private val context: Context) {
             if (matchesPattern(normalizedCommand, pattern)) {
                 Log.d(TAG, "✅ Pattern trouvé: $pattern")
                 try {
-                    if (pattern.contains("ouvrir.*") || pattern.contains("lancer.*")) {
-                        // Commandes dynamiques qui nécessitent le paramètre
-                        action.invoke(normalizedCommand)
-                    } else {
-                        action.invoke()
-                    }
+                    action.execute(normalizedCommand)
                     commandExecuted = true
                     break
                 } catch (e: Exception) {
-                    Log.e(TAG, "❌ Erreur exécution commande", e)
-                    TTSManager.speak(context, "Erreur exécution commande")
+                    Log.e(TAG, "❌ Erreur execution commande", e)
+                    TTSManager.speak(context, "Erreur execution commande")
                 }
             }
         }
@@ -159,7 +265,7 @@ class AdvancedCommandProcessor(private val context: Context) {
      */
     private fun handleEmergency(command: String) {
         Log.w(TAG, "🚨 COMMANDE URGENCE: $command")
-        TTSManager.speak(context, "Commande urgence détectée. Assistance nécessaire.")
+        TTSManager.speak(context, "Commande urgence detectee. Assistance necessaire.")
     }
     
     /**
@@ -175,17 +281,17 @@ class AdvancedCommandProcessor(private val context: Context) {
                 TTSManager.speak(context, "Dites 'ouvrir' suivi du nom de l'application")
             command.contains("musique") -> TTSManager.speak(context, "Dites 'musique play', 'musique pause' ou 'musique suivant'")
             command.contains("wifi") || command.contains("internet") -> 
-                TTSManager.speak(context, "Dites 'activer le wifi' ou 'désactiver le wifi'")
+                TTSManager.speak(context, "Dites 'activer le wifi' ou 'desactiver le wifi'")
             else -> TTSManager.speak(context, "Je n'ai pas compris. Dites 'aide' pour connaître les commandes.")
         }
     }
     
     // =========================================================================
-    // IMPLÉMENTATIONS DES COMMANDES - APPLICATIONS DYNAMIQUES
+    // IMPLEMENTATIONS DES COMMANDES - APPLICATIONS DYNAMIQUES
     // =========================================================================
     
     /**
-     * Ouvre n'importe quelle application détectée dynamiquement
+     * Ouvre n'importe quelle application detectee dynamiquement
      */
     private fun openAnyApp(command: String) {
         Log.d(TAG, "📱 Ouverture application dynamique: $command")
@@ -218,7 +324,7 @@ class AdvancedCommandProcessor(private val context: Context) {
      * Ouvre une application spécifique
      */
     private fun openSpecificApp(appType: String) {
-        Log.d(TAG, "📱 Ouverture application spécifique: $appType")
+        Log.d(TAG, "📱 Ouverture application specifique: $appType")
         
         if (appManager.openApp(appType)) {
             TTSManager.speak(context, "Ouverture de $appType")
@@ -255,16 +361,16 @@ class AdvancedCommandProcessor(private val context: Context) {
             }
             "previous" -> {
                 intent.putExtra("command", "previous")
-                TTSManager.speak(context, "Morceau précédent")
+                TTSManager.speak(context, "Morceau precedent")
             }
         }
         
         try {
             context.sendBroadcast(intent)
-            Log.d(TAG, "✅ Commande musique envoyée: $action")
+            Log.d(TAG, "✅ Commande musique envoyee: $action")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Erreur contrôle musique", e)
-            TTSManager.speak(context, "Erreur contrôle musique")
+            Log.e(TAG, "❌ Erreur controle musique", e)
+            TTSManager.speak(context, "Erreur controle musique")
         }
     }
     
@@ -272,14 +378,14 @@ class AdvancedCommandProcessor(private val context: Context) {
      * Affiche les applications installées
      */
     private fun showInstalledApps() {
-        Log.d(TAG, "📋 Affichage applications installées")
+        Log.d(TAG, "📋 Affichage applications installees")
         val apps = appManager.getInstalledApps()
         
         if (apps.isNotEmpty()) {
             val appNames = apps.keys.take(10).joinToString(", ") // Maximum 10 apps
             TTSManager.speak(context, "Applications disponibles: $appNames")
         } else {
-            TTSManager.speak(context, "Aucune application détectée")
+            TTSManager.speak(context, "Aucune application detectee")
         }
     }
     
@@ -289,12 +395,12 @@ class AdvancedCommandProcessor(private val context: Context) {
     
     private fun changeVolume(delta: Int) {
         Log.d(TAG, "🔊 Changement volume: $delta")
-        TTSManager.speak(context, "Volume ajusté")
+        TTSManager.speak(context, "Volume ajuste")
     }
     
     private fun setVolume(level: Int) {
-        Log.d(TAG, "🔊 Volume fixé à: $level")
-        TTSManager.speak(context, "Volume réglé sur $level pourcent")
+        Log.d(TAG, "🔊 Volume fixe a: $level")
+        TTSManager.speak(context, "Volume regle sur $level pourcent")
     }
     
     private fun goHome() {
@@ -304,46 +410,46 @@ class AdvancedCommandProcessor(private val context: Context) {
             intent.addCategory(Intent.CATEGORY_HOME)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             context.startActivity(intent)
-            TTSManager.speak(context, "Retour à l'accueil")
+            TTSManager.speak(context, "Retour a l'accueil")
         } catch (e: Exception) {
             Log.e(TAG, "❌ Erreur retour accueil", e)
         }
     }
     
     private fun goBack() {
-        Log.d(TAG, "↩️ Retour arrière")
-        TTSManager.speak(context, "Retour en arrière")
+        Log.d(TAG, "↩️ Retour arriere")
+        TTSManager.speak(context, "Retour en arriere")
     }
     
     private fun lockScreen() {
-        Log.d(TAG, "🔒 Verrouillage écran")
-        TTSManager.speak(context, "Écran verrouillé")
+        Log.d(TAG, "🔒 Verrouillage ecran")
+        TTSManager.speak(context, "Ecran verrouille")
     }
     
     private fun toggleWifi(enable: Boolean) {
         Log.d(TAG, "📶 Wifi: $enable")
-        TTSManager.speak(context, if (enable) "Wifi activé" else "Wifi désactivé")
+        TTSManager.speak(context, if (enable) "Wifi active" else "Wifi desactive")
     }
     
     private fun toggleBluetooth(enable: Boolean) {
         Log.d(TAG, "📱 Bluetooth: $enable")
-        TTSManager.speak(context, if (enable) "Bluetooth activé" else "Bluetooth désactivé")
+        TTSManager.speak(context, if (enable) "Bluetooth active" else "Bluetooth desactive")
     }
     
     private fun toggleMobileData(enable: Boolean) {
-        Log.d(TAG, "📶 Données mobiles: $enable")
-        TTSManager.speak(context, if (enable) "Données mobiles activées" else "Données mobiles désactivées")
+        Log.d(TAG, "📶 Donnees mobiles: $enable")
+        TTSManager.speak(context, if (enable) "Donnees mobiles activees" else "Donnees mobiles desactivees")
     }
     
     private fun showCapabilities() {
-        Log.d(TAG, "📋 Affichage capacités")
+        Log.d(TAG, "📋 Affichage capacites")
         val capabilities = """
             Je peux vous aider avec:
-            • Applications: ouvrir n'importe quelle app installée
-            • Musique: play, pause, stop, suivant, précédent
+            • Applications: ouvrir n'importe quelle app installee
+            • Musique: play, pause, stop, suivant, precedent
             • Volume: augmenter, baisser, muet
             • Navigation: accueil, retour, verrouillage
-            • Connexion: wifi, bluetooth, données mobiles
+            • Connexion: wifi, bluetooth, donnees mobiles
             Dites 'aide' pour plus d'informations.
         """.trimIndent()
         TTSManager.speak(context, capabilities)
@@ -353,11 +459,11 @@ class AdvancedCommandProcessor(private val context: Context) {
         Log.d(TAG, "ℹ️ Affichage aide")
         val help = """
             Commandes disponibles:
-            Apps: 'ouvrir' suivi du nom, 'ouvrir caméra', 'ouvrir spotify'
+            Apps: 'ouvrir' suivi du nom, 'ouvrir camera', 'ouvrir spotify'
             Musique: 'musique play', 'musique pause', 'morceau suivant'
             Volume: 'augmenter volume', 'volume muet'
-            Système: 'retour accueil', 'éteindre écran'
-            Dites 'commandes disponibles' pour la liste complète.
+            Systeme: 'retour accueil', 'eteindre ecran'
+            Dites 'commandes disponibles' pour la liste complete.
         """.trimIndent()
         TTSManager.speak(context, help)
     }
