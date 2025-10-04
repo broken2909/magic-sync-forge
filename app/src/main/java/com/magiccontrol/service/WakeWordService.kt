@@ -39,9 +39,19 @@ class WakeWordService : Service() {
             }
             
             startForegroundService()
-            initializeAudioDetector()
-            serviceStarted = true
-            Log.d(TAG, "Service activé")
+            
+            // 🎯 DÉLAI CRITIQUE: Laisser le système audio se préparer (1500ms)
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    initializeAudioDetector()
+                    serviceStarted = true
+                    Log.d(TAG, "✅ Service activé avec délai de sécurité")
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Erreur initialisation différée", e)
+                    handleServiceError()
+                }
+            }, 1500L)
+            
         } catch (e: Exception) {
             Log.e(TAG, "Erreur démarrage", e)
             handleServiceError()
