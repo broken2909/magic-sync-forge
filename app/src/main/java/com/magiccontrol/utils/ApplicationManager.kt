@@ -4,87 +4,69 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.net.Uri
+import android.provider.ContactsContract
+import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Log
 
-/**
- * Gestionnaire dynamique des applications installées
- */
 class ApplicationManager(private val context: Context) {
 
     private val TAG = "ApplicationManager"
-    
-    // Applications système courantes avec leurs packages
+
     private val systemApps = mapOf(
-        "appareil photo" to listOf(
-            "com.android.camera2",
-            "com.google.android.GoogleCamera", 
-            "com.sec.android.app.camera"
-        ),
-        "galerie" to listOf(
-            "com.android.gallery3d",
-            "com.google.android.apps.photos",
-            "com.sec.android.gallery3d"
-        ),
-        "navigateur" to listOf(
-            "com.android.chrome",
-            "com.sec.android.app.sbrowser",
-            "org.mozilla.firefox"
-        ),
+        "appareil photo" to listOf("com.android.camera2", "com.google.android.GoogleCamera", "com.sec.android.app.camera"),
+        "galerie" to listOf("com.android.gallery3d", "com.google.android.apps.photos", "com.sec.android.gallery3d"),
+        "navigateur" to listOf("com.android.chrome", "com.sec.android.app.sbrowser", "org.mozilla.firefox"),
         "paramètres" to listOf("com.android.settings"),
-        "musique" to listOf(
-            "com.sec.android.app.music",
-            "com.android.music",
-            "com.spotify.music"
-        ),
+        "musique" to listOf("com.sec.android.app.music", "com.android.music", "com.spotify.music"),
         "messages" to listOf("com.android.mms"),
         "contacts" to listOf("com.android.contacts"),
         "téléphone" to listOf("com.android.dialer")
     )
-    
-    /**
-     * Obtient la liste des applications installées avec leurs noms
-     */
+
     fun getInstalledApps(): Map<String, String> {
         val apps = mutableMapOf<String, String>()
-        
         try {
             val mainIntent = Intent(Intent.ACTION_MAIN, null)
             mainIntent.addCategory(Intent.CATEGORY_LAUNCHER)
-            
             val packages = context.packageManager.queryIntentActivities(mainIntent, 0)
-            
             for (info in packages) {
                 val appName = info.loadLabel(context.packageManager).toString()
                 val packageName = info.activityInfo.packageName
                 apps[appName.lowercase()] = packageName
             }
-            
             Log.d(TAG, "📱 ${apps.size} applications détectées")
-            
         } catch (e: Exception) {
             Log.e(TAG, "❌ Erreur scan applications", e)
         }
-        
         return apps
     }
-    
-    /**
-     * Ouvre une application par son nom
-     */
+
+    private fun launchIntent(intent: Intent): Boolean {
+        return try {
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(intent)
+            Log.d(TAG, "✅ Intent lancé: ${intent.action}")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur lancement intent", e)
+            false
+        }
+    }
+
     fun openApp(appName: String): Boolean {
         Log.d(TAG, "📱 Tentative ouverture: $appName")
-        
-        // Mapping des apps courantes vers leurs intents
         val appIntents = mapOf(
-            "appareil photo" to Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE),
-            "caméra" to Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE),
-            "galerie" to Intent(Intent.ACTION_VIEW, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
-            "photos" to Intent(Intent.ACTION_VIEW, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
+            "appareil photo" to Intent(MediaStore.ACTION_IMAGE_CAPTURE),
+            "caméra" to Intent(MediaStore.ACTION_IMAGE_CAPTURE),
+            "galerie" to Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
+            "photos" to Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
             "navigateur" to Intent(Intent.ACTION_VIEW, Uri.parse("https://google.com")),
             "internet" to Intent(Intent.ACTION_VIEW, Uri.parse("https://google.com")),
             "chrome" to Intent(Intent.ACTION_VIEW, Uri.parse("https://google.com")),
-            "paramètres" to Intent(android.provider.Settings.ACTION_SETTINGS),
-            "settings" to Intent(android.provider.Settings.ACTION_SETTINGS),
+            "paramètres" to Intent(Settings.ACTION_SETTINGS),
+            "settings" to Intent(Settings.ACTION_SETTINGS),
             "musique" to Intent(Intent.ACTION_VIEW, Uri.parse("content://media/external/audio/media")),
             "spotify" to Intent(Intent.ACTION_VIEW, Uri.parse("spotify:")),
             "messages" to Intent(Intent.ACTION_VIEW, Uri.parse("sms:")),
@@ -93,8 +75,6 @@ class ApplicationManager(private val context: Context) {
             "téléphone" to Intent(Intent.ACTION_DIAL),
             "appel" to Intent(Intent.ACTION_DIAL)
         )
-        
-        // Recherche dans le mapping
         val normalizedName = appName.lowercase()
         for ((key, intent) in appIntents) {
             if (normalizedName.contains(key)) {
@@ -102,8 +82,6 @@ class ApplicationManager(private val context: Context) {
                 return launchIntent(intent)
             }
         }
-        
-        // Fallback: recherche dans les apps installées
         Log.d(TAG, "🔍 Recherche dans apps installées: $appName")
         val installedApps = getInstalledApps()
         for ((name, packageName) in installedApps) {
@@ -112,14 +90,10 @@ class ApplicationManager(private val context: Context) {
                 return launchApp(packageName)
             }
         }
-        
         Log.w(TAG, "❌ App non trouvée: $appName")
         return false
     }
-    
-    /**
-     * Lance une application par son package
-     */
+
     private fun launchApp(packageName: String): Boolean {
         return try {
             val intent = context.packageManager.getLaunchIntentForPackage(packageName)
@@ -137,31 +111,21 @@ class ApplicationManager(private val context: Context) {
             false
         }
     }
-    
-    /**
-     * Vérifie si une application est installée
-     */
+
     fun isAppInstalled(appName: String): Boolean {
         val normalizedName = appName.lowercase()
         val installedApps = getInstalledApps()
-        
-        return installedApps.keys.any { it.contains(normalizedName) } ||
-               systemApps.keys.any { normalizedName.contains(it) }
+        return installedApps.keys.any { it.contains(normalizedName) } || systemApps.keys.any { normalizedName.contains(it) }
     }
-    
-    /**
-     * Obtient les suggestions d'applications similaires
-     */
+
     fun getAppSuggestions(input: String): List<String> {
         val suggestions = mutableListOf<String>()
         val installedApps = getInstalledApps()
-        
         for (appName in installedApps.keys) {
             if (appName.contains(input.lowercase()) || input.lowercase().contains(appName)) {
                 suggestions.add(appName)
             }
         }
-        
-        return suggestions.take(5) // Maximum 5 suggestions
+        return suggestions.take(5)
     }
 }
