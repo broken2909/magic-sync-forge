@@ -247,6 +247,8 @@ class AdvancedCommandProcessor(private val context: Context) {
      */
     private fun matchesPattern(command: String, pattern: String): Boolean {
         val regexPattern = pattern
+            .replace(".*", ".*?")  # CORRIGÉ: .*? pour regex non-greedy
+            .replace(" ", ".*?")   # CORRIGÉ: .*? entre les mots
             .replace(".*", ".*")
             .replace(" ", ".*")
         
