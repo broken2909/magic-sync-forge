@@ -468,3 +468,4 @@ class AdvancedCommandProcessor(private val context: Context) {
         TTSManager.speak(context, help)
     }
 }
+// Correction: appName au lieu de appType - 1759599963
