@@ -16,6 +16,8 @@ class WakeWordService : Service() {
 
     private var wakeWordDetector: WakeWordDetector? = null
     private val TAG = "WakeWordService"
+    private val NOTIFICATION_ID = 1001
+    private val CHANNEL_ID = "MAGIC_CONTROL_CHANNEL"
     private var serviceStarted = false
     private var retryCount = 0
     private val maxRetries = 3
@@ -23,6 +25,7 @@ class WakeWordService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "Service créé")
+        createNotificationChannel()  // ✅ RESTAURÉ !
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -39,19 +42,9 @@ class WakeWordService : Service() {
             }
             
             startForegroundService()
-            
-            // 🎯 DÉLAI CRITIQUE: Laisser le système audio se préparer (1500ms)
-            Handler(Looper.getMainLooper()).postDelayed({
-                try {
-                    initializeAudioDetector()
-                    serviceStarted = true
-                    Log.d(TAG, "✅ Service activé avec délai de sécurité")
-                } catch (e: Exception) {
-                    Log.e(TAG, "❌ Erreur initialisation différée", e)
-                    handleServiceError()
-                }
-            }, 1500L)
-            
+            initializeAudioDetector()
+            serviceStarted = true
+            Log.d(TAG, "Service activé")
         } catch (e: Exception) {
             Log.e(TAG, "Erreur démarrage", e)
             handleServiceError()
@@ -68,17 +61,32 @@ class WakeWordService : Service() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Magic Control Voice",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Service reconnaissance vocale"
+                setShowBadge(false)
+            }
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(channel)
+        }
+    }
+
     private fun startForegroundService() {
         val keyword = PreferencesManager.getActivationKeyword(applicationContext)
         val language = PreferencesManager.getCurrentLanguage(applicationContext)
         
-        val notification = NotificationCompat.Builder(this, "MAGIC_CONTROL")
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Magic Control Actif")
             .setContentText("Dites \"$keyword\" • ${language.uppercase()}")
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setOngoing(true)
             .build()
-        startForeground(1001, notification)
+        startForeground(NOTIFICATION_ID, notification)
     }
 
     private fun initializeAudioDetector() {
