@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.magiccontrol.tts.TTSManager
 import com.magiccontrol.utils.PreferencesManager
-import com.magiccontrol.command.CommandProcessor
+import com.magiccontrol.command.AdvancedCommandProcessor
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.json.JSONObject
@@ -33,7 +33,7 @@ class ConversationManager(private val context: Context) {
     
     // Gestion conversation
     private var currentState = ConversationState.LISTENING_WAKE_WORD
-    private var commandProcessor: CommandProcessor? = null
+    private var commandProcessor: AdvancedCommandProcessor? = null
     private var lastWakeWordTime = 0L
     private val WAKE_WORD_COOLDOWN = 3000L // 3 secondes
     
@@ -41,7 +41,7 @@ class ConversationManager(private val context: Context) {
     private val sampleRate = 16000
     
     init {
-        commandProcessor = CommandProcessor(context)
+        commandProcessor = AdvancedCommandProcessor(context)
         initializeVosk()
     }
 
