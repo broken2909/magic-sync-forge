@@ -1,0 +1,18 @@
+=== BACKUP MAGIC SYNC FORGE ===
+Date: Sat Oct  4 17:30:49 CEST 2025
+Dossier: backups/project_backup_20251004_173048
+
+FICHIERS CRITIQUES SAUVEGARDÉS:
+- ConversationManager.kt (architecture fusionnée)
+- WakeWordDetector.kt (détection variantes magic)  
+- WakeWordService.kt (service principal)
+- AndroidManifest.xml (configuration app)
+
+STATUT ACTUEL:
+- Architecture fusionnée active
+- FullRecognitionService supprimé
+- 8 variantes de "magic" configurées
+- AdvancedCommandProcessor prêt à intégrer
+
+COMMANDE RESTAURATION:
+cp -r backups/project_backup_20251004_173048/app/src/main/java/com/magiccontrol/* app/src/main/java/com/magiccontrol/

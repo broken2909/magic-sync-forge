@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Liste des langues pour les préférences -->
+    <string-array name="language_entries">
+        <item>Français</item>
+        <item>English</item>
+        <item>System (Auto)</item>
+    </string-array>
+    
+    <string-array name="language_values">
+        <item>fr</item>
+        <item>en</item>
+        <item>system</item>
+    </string-array>
+</resources>
